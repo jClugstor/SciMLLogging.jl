@@ -9,6 +9,16 @@
     Default
 end
 
+"""
+$(TYPEDEF)
+
+Base for types which specify which log messages are emitted at what level.
+"""
+abstract type AbstractVerbositySpecifier{T} end
+
+
+
+
 # Utilities 
 
 function message_level(verbose::AbstractVerbositySpecifier{true}, option, group)

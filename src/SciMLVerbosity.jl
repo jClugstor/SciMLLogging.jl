@@ -1,6 +1,7 @@
 module SciMLVerbosity
 
-import Moshi: @data, @match
+import Moshi.Data: @data
+import Moshi.Match: @match
 
 include("utils.jl")
 include("linear.jl")
