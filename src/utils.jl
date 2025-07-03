@@ -58,7 +58,7 @@ function emit_message(
     f, verbose::AbstractVerbositySpecifier{false}, option, group, file, line, _module)
 end
 
-@doc doc"""
+@doc """
 A macro that emits a log message based on the log level specified in the `option` and `group` of the `AbstractVerbositySpecifier` supplied. 
     
 `f_or_message` may be a message String, or a 0-argument function that returns a String. 

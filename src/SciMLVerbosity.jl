@@ -1,5 +1,6 @@
 module SciMLVerbosity
 
+using DocStringExtensions
 import Moshi.Data: @data
 import Moshi.Match: @match
 
