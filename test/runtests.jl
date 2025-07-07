@@ -1,6 +1,4 @@
 using SciMLVerbosity
 using Test
 
-@testset "SciMLVerbosity.jl" begin
-    # Write your tests here.
-end
+@time @safetestset "Basic Tests" include("test/basics.jl")
