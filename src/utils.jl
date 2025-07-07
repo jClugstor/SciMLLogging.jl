@@ -7,11 +7,11 @@
     Edge
     All
     Default
+    Code(Expr)
 end
 
-"""
-$(TYPEDEF)
-
+""" 
+AbstractVerbositySpecifier{T}
 Base for types which specify which log messages are emitted at what level.
 """
 abstract type AbstractVerbositySpecifier{T} end
@@ -26,6 +26,7 @@ function message_level(verbose::AbstractVerbositySpecifier{true}, option, group)
     opt_level = getproperty(group, option)
 
     @match opt_level begin
+        Verbosity.Code(expr) => expr
         Verbosity.None() => nothing
         Verbosity.Info() => Logging.Info
         Verbosity.Warn() => Logging.Warn
@@ -39,7 +40,10 @@ function emit_message(
     _module) where {V<:AbstractVerbositySpecifier{true}}
     level = message_level(
         verbose, option, group)
-    if !isnothing(level)
+        
+    if level isa Expr
+        level
+    elseif !isnothing(level)
         message = f()
         Base.@logmsg level message _file = file _line = line _module = _module
     end
@@ -58,7 +62,7 @@ function emit_message(
     f, verbose::AbstractVerbositySpecifier{false}, option, group, file, line, _module)
 end
 
-@doc """
+"""
 A macro that emits a log message based on the log level specified in the `option` and `group` of the `AbstractVerbositySpecifier` supplied. 
     
 `f_or_message` may be a message String, or a 0-argument function that returns a String. 
