@@ -67,22 +67,5 @@ end
     end
 end
 
-@testset "Code Injection" begin
-    code = quote
-        
-    end
-    
-    verbose = TestVerbosity{true}(TestOptionsVerbosity(test1 = Verbosity.Code()))
-end
 
 
-
-code = quote
-    println("hellooo")
-end
-
-verbose = TestVerbosity{true}(TestOptionsVerbosity(test1=Verbosity.Code(code)))
-
-@macroexpand @SciMLMessage("code injection", verbose, :test1, :options)
-
-@SciMLMessage("code injection", verbose, :test1, :options)
