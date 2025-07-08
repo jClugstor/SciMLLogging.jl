@@ -65,14 +65,14 @@ end
 # Verbosity Levels
 SciMLVerbosity supports several verbosity levels:
 
-- Verbosity.None(): No output
-- Verbosity.Info(): Informational messages
-- Verbosity.Warn(): Warning messages
-- Verbosity.Error(): Error messages
-- Verbosity.Level(n): Custom logging level (using Julia's LogLevel(n))
-- Verbosity.Edge(): Special case for edge behaviors
-- Verbosity.All(): Maximum verbosity
-- Verbosity.Default(): Default verbosity settings
+- `Verbosity.None()`: No output
+- `Verbosity.Info()`: Informational messages
+- `Verbosity.Warn()`: Warning messages
+- `Verbosity.Error()`: Error messages
+- `Verbosity.Level(n)`: Custom logging level (using Julia's LogLevel(n))
+- `Verbosity.Edge()`: Special case for edge behaviors
+- `Verbosity.All()`: Maximum verbosity
+- `Verbosity.Default()`: Default verbosity settings
 
 # Creating Custom Verbosity Types
 
