@@ -1,7 +1,7 @@
 name = "SciMLVerbosity"
 uuid = "a05b3ec9-34a1-438a-b0a1-c0adb433119f"
 authors = ["Jadon Clugston"]
-version = "1.0.0-DEV"
+version = "1.0.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -14,7 +14,7 @@ DocStringExtensions = "0.9.5"
 Logging = "1.11.0"
 LoggingExtras = "1.1.0"
 Moshi = "0.3.6"
-julia = "1.6.7"
+julia = "1.1.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
