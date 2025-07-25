@@ -92,6 +92,47 @@ macro SciMLMessage(f_or_message, verb, option, group)
         $(esc(f_or_message)), $(esc(verb)), $option, $group, $file, $line, $_module))
 end
 
+"""
+        `verbosity_to_int(verb::Verbosity.Type)`
+    Takes a `Verbosity.Type` and gives a corresponding integer value. 
+    Verbosity settings that use integers or enums that hold integers are relatively common.
+    This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
+    are mapped to an integer. 
+
+    - None() => 0
+    - Info() => 1
+    - Warn() => 2
+    - Error() => 3
+    - Level(i) => i
+"""
+function verbosity_to_int(verb::Verbosity.Type)
+    @match verb begin
+        Verbosity.None() => 0
+        Verbosity.Info() => 1
+        Verbosity.Warn() => 2
+        Verbosity.Error() => 3
+        Verbosity.Level(i) => i
+    end
+end
+
+"""
+        `verbosity_to_bool(verb::Verbosity.Type)`
+    Takes a `Verbosity.Type` and gives a corresponding boolean value.
+    Verbosity settings that use booleans are relatively common.
+    This provides an interface so that these packages can be used with SciMLVerbosity.
+    If the verbosity is `Verbosity.None`, then `false` is returned. Otherwise, `true` is returned.
+"""
+function verbosity_to_bool(verb::Verbosity.Type)
+    @match verb begin
+        Verbosity.None() => false
+        _ => true
+    end
+end
+
+
+
+
+
 function SciMLLogger(; info_repl=true, warn_repl=true, error_repl=true,
     info_file=nothing, warn_file=nothing, error_file=nothing)
     info_sink = isnothing(info_file) ? NullLogger() : FileLogger(info_file)
