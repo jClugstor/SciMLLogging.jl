@@ -92,6 +92,27 @@ macro SciMLMessage(f_or_message, verb, option, group)
         $(esc(f_or_message)), $(esc(verb)), $option, $group, $file, $line, $_module))
 end
 
+function verbosity_to_int(verb::Verbosity.Type)
+    @match verb begin
+        Verbosity.None() => 0
+        Verbosity.Info() => 1
+        Verbosity.Warn() => 2
+        Verbosity.Error() => 3
+        Verbosity.Level(i) => i
+    end
+end
+
+function verbosity_to_bool(verb::Verbosity.Type)
+    @match verb begin
+        Verbosity.None() => false
+        _ => true
+    end
+end
+
+
+
+
+
 function SciMLLogger(; info_repl=true, warn_repl=true, error_repl=true,
     info_file=nothing, warn_file=nothing, error_file=nothing)
     info_sink = isnothing(info_file) ? NullLogger() : FileLogger(info_file)
