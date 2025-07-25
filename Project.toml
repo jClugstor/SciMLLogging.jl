@@ -11,7 +11,7 @@ Moshi = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
 
 [compat]
 DocStringExtensions = "0.9.5"
-Logging = "1.11.0"
+Logging = "1.1.0"
 LoggingExtras = "1.1.0"
 Moshi = "0.3.6"
 julia = "1.1.0"
