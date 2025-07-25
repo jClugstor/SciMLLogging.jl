@@ -1,5 +1,5 @@
 using SciMLVerbosity
 using Test
-using SafeTestSets
+using SafeTestsets
 
 @time @safetestset "Basic Tests" include("test/basics.jl")
