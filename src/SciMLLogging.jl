@@ -1,4 +1,4 @@
-module SciMLVerbosity
+module SciMLLogging
 
 import Moshi.Data: @data
 import Moshi.Match: @match

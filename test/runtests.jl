@@ -1,4 +1,4 @@
-using SciMLVerbosity
+using SciMLLogging
 using Test
 using SafeTestsets
 
