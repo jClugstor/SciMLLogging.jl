@@ -1,5 +1,5 @@
-using SciMLVerbosity
-using SciMLVerbosity: @match, Verbosity, AbstractVerbositySpecifier, @SciMLMessage
+using SciMLLogging
+using SciMLLogging: @match, Verbosity, AbstractVerbositySpecifier, @SciMLMessage
 using Logging
 using Test
 

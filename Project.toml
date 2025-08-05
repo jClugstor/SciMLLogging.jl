@@ -1,4 +1,4 @@
-name = "SciMLVerbosity"
+name = "SciMLLogging"
 uuid = "a05b3ec9-34a1-438a-b0a1-c0adb433119f"
 authors = ["Jadon Clugston"]
 version = "1.2.0"
