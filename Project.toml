@@ -1,7 +1,7 @@
 name = "SciMLLogging"
-uuid = "a05b3ec9-34a1-438a-b0a1-c0adb433119f"
+uuid = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 authors = ["Jadon Clugston"]
-version = "1.2.0"
+version = "0.1.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
