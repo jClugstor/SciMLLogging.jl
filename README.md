@@ -1,4 +1,4 @@
-# SciMLVerbosity
+# SciMLLogging
 
 [![Build Status](https://github.com/jClugstor/SciMLVerbosity.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jClugstor/SciMLVerbosity.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
@@ -8,10 +8,10 @@ Installation
 
 ```julia
 using Pkg
-Pkg.add("SciMLVerbosity")
+Pkg.add("SciMLLogging")
 ```
 
-SciMLVerbosity.jl provides a structured approach to controlling verbosity in scientific computing workflows. It enables:
+SciMLLogging.jl provides a structured approach to controlling verbosity in scientific computing workflows. It enables:
 
 Fine-grained control over which messages are displayed and at what levels
 Hierarchical organization of verbosity settings by component and message type
