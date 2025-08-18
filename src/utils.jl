@@ -1,3 +1,19 @@
+"""
+    Verbosity
+
+A sum type representing different verbosity levels.
+
+# Variants
+- `None`: No output
+- `Info`: Maps to `Logging.Info`
+- `Warn`: Maps to `Logging.Warn`  
+- `Error`: Maps to `Logging.Error`
+- `Level(Int)`: Custom log level
+- `Edge`: Special case handling
+- `All`: Maximum verbosity
+- `Default`: Default settings
+- `Code(Expr)`: Execute custom code
+"""
 @data Verbosity begin
     None
     Info
@@ -11,8 +27,13 @@
 end
 
 """
-AbstractVerbositySpecifier{T}
-Base for types which specify which log messages are emitted at what level.
+    AbstractVerbositySpecifier{T}
+
+Abstract base type for verbosity specifiers.
+
+The type parameter `T` is a boolean:
+- `T = true`: Verbosity enabled, messages will be processed
+- `T = false`: Verbosity disabled, no runtime overhead
 """
 abstract type AbstractVerbositySpecifier{T} end
 
@@ -60,25 +81,27 @@ function emit_message(
 end
 
 """
-A macro that emits a log message based on the log level specified in the `option` and `group` of the `AbstractVerbositySpecifier` supplied.
+    @SciMLMessage(message_or_function, verbose, option, group)
 
-`f_or_message` may be a message String, or a 0-argument function that returns a String.
+Emit a log message based on verbosity settings.
 
-## Usage
+# Arguments
+- `message_or_function`: String message or 0-argument function returning a string
+- `verbose`: An `AbstractVerbositySpecifier` instance
+- `option`: Symbol for the specific option (e.g., `:test1`)
+- `group`: Symbol for the group containing the option (e.g., `:options`)
 
-To emit a simple string, `@SciMLMessage("message", verbosity, :option, :group)` will emit a log message with the LogLevel specified in `verbosity`, at the appropriate `option` and `group`.
-
-`@SciMLMessage` can also be used to emit a log message coming from the evaluation of a 0-argument function. This function is resolved in the environment of the macro call.
-Therefore it can use variables from the surrounding environment. This may be useful if the log message writer wishes to carry out some calculations using existing variables
-and use them in the log message.
-
+# Examples
 ```julia
+# String message
+@SciMLMessage("Hello", verbose, :test1, :options)
+
+# Function for lazy evaluation
 x = 10
 y = 20
-
-@SciMLMessage(verbosity, :option, :group) do
+@SciMLMessage(verbose, :test1, :options) do
     z = x + y
-    "Message is: x + y = \$z"
+    "Sum: \$z"
 end
 ```
 """
@@ -91,17 +114,16 @@ macro SciMLMessage(f_or_message, verb, option, group)
 end
 
 """
-        `verbosity_to_int(verb::Verbosity.Type)`
-    Takes a `Verbosity.Type` and gives a corresponding integer value. 
-    Verbosity settings that use integers or enums that hold integers are relatively common.
-    This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
-    are mapped to an integer. 
+    verbosity_to_int(verb::Verbosity.Type)
 
-    - None() => 0
-    - Info() => 1
-    - Warn() => 2
-    - Error() => 3
-    - Level(i) => i
+Convert a `Verbosity.Type` to an integer.
+
+# Mapping
+- `None()` → 0
+- `Info()` → 1
+- `Warn()` → 2
+- `Error()` → 3
+- `Level(i)` → i
 """
 function verbosity_to_int(verb::Verbosity.Type)
     @match verb begin
@@ -114,11 +136,11 @@ function verbosity_to_int(verb::Verbosity.Type)
 end
 
 """
-        `verbosity_to_bool(verb::Verbosity.Type)`
-    Takes a `Verbosity.Type` and gives a corresponding boolean value.
-    Verbosity settings that use booleans are relatively common.
-    This provides an interface so that these packages can be used with SciMLVerbosity.
-    If the verbosity is `Verbosity.None`, then `false` is returned. Otherwise, `true` is returned.
+    verbosity_to_bool(verb::Verbosity.Type)
+
+Convert a `Verbosity.Type` to a boolean.
+
+Returns `false` for `Verbosity.None()`, `true` for all other levels.
 """
 function verbosity_to_bool(verb::Verbosity.Type)
     @match verb begin
@@ -127,6 +149,19 @@ function verbosity_to_bool(verb::Verbosity.Type)
     end
 end
 
+"""
+    SciMLLogger(; kwargs...)
+
+Create a logger that routes messages to REPL and/or files based on log level.
+
+# Keyword Arguments
+- `info_repl = true`: Show info messages in REPL
+- `warn_repl = true`: Show warnings in REPL
+- `error_repl = true`: Show errors in REPL
+- `info_file = nothing`: File path for info messages
+- `warn_file = nothing`: File path for warnings
+- `error_file = nothing`: File path for errors
+"""
 function SciMLLogger(; info_repl = true, warn_repl = true, error_repl = true,
         info_file = nothing, warn_file = nothing, error_file = nothing)
     info_sink = isnothing(info_file) ? NullLogger() : FileLogger(info_file)
