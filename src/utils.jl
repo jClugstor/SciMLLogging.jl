@@ -1,97 +1,87 @@
-"""
-    Verbosity
+module Verbosity
+    abstract type LogLevel end
+    struct Silent <: LogLevel end
+    struct Info <: LogLevel end
+    struct Warn <: LogLevel end
+    struct Error <: LogLevel end
+    struct Level <: LogLevel
+        level::Int
+    end
 
-A sum type representing different verbosity levels.
-
-# Variants
-- `None`: No output
-- `Info`: Maps to `Logging.Info`
-- `Warn`: Maps to `Logging.Warn`  
-- `Error`: Maps to `Logging.Error`
-- `Level(Int)`: Custom log level
-- `Edge`: Special case handling
-- `All`: Maximum verbosity
-- `Default`: Default settings
-- `Code(Expr)`: Execute custom code
-"""
-@data Verbosity begin
-    None
-    Info
-    Warn
-    Error
-    Level(Int)
-    Edge
-    All
-    Default
-    Code(Expr)
+    abstract type VerbosityPreset end
+    struct None <: VerbosityPreset end
+    struct All <: VerbosityPreset end
+    struct Minimal <: VerbosityPreset end
+    struct Standard <: VerbosityPreset end
+    struct Detailed <: VerbosityPreset end
 end
 
+using .Verbosity
+
 """
-    AbstractVerbositySpecifier{T}
-
-Abstract base type for verbosity specifiers.
-
-The type parameter `T` is a boolean:
-- `T = true`: Verbosity enabled, messages will be processed
-- `T = false`: Verbosity disabled, no runtime overhead
+AbstractVerbositySpecifier{T}
+    Base for types which specify which log messages are emitted at what level.
+    
 """
 abstract type AbstractVerbositySpecifier{T} end
 
 # Utilities 
 
-function message_level(verbose::AbstractVerbositySpecifier{true}, option, group)
-    group = getproperty(verbose, group)
-    opt_level = getproperty(group, option)
+function message_level(verbose::AbstractVerbositySpecifier{true}, option)
+    opt_level = getproperty(verbose, option)
 
-    @match opt_level begin
-        Verbosity.Code(expr) => expr
-        Verbosity.None() => nothing
-        Verbosity.Info() => Logging.Info
-        Verbosity.Warn() => Logging.Warn
-        Verbosity.Error() => Logging.Error
-        Verbosity.Level(i) => Logging.LogLevel(i)
+    if opt_level isa Verbosity.Silent
+        return nothing
+    elseif opt_level isa Verbosity.Info
+        return Logging.Info
+    elseif opt_level isa Verbosity.Warn
+        return Logging.Warn
+    elseif opt_level isa Verbosity.Error
+        return Logging.Error
+    elseif opt_level isa Verbosity.Level
+        return Logging.LogLevel(opt_level.level)
+    else
+        return nothing
     end
 end
 
 function emit_message(
-        f::Function, verbose::V, option, group, file, line,
+        f::Function, verbose::V, option, file, line,
         _module) where {V <: AbstractVerbositySpecifier{true}}
-    level = message_level(
-        verbose, option, group)
+    level = message_level(verbose, option)
 
-    if level isa Expr
-        level
-    elseif !isnothing(level)
+    if !isnothing(level)
         message = f()
         Base.@logmsg level message _file=file _line=line _module=_module
     end
 end
 
 function emit_message(message::String, verbose::V,
-        option, group, file, line, _module) where {V <: AbstractVerbositySpecifier{true}}
-    level = message_level(verbose, option, group)
+        option, file, line, _module) where {V <: AbstractVerbositySpecifier{true}}
+    level = message_level(verbose, option)
 
     if !isnothing(level)
-        Base.@logmsg level message _file=file _line=line _module=_module _group=group
+        Base.@logmsg level message _file=file _line=line _module=_module
     end
 end
 
 function emit_message(
-        f, verbose::AbstractVerbositySpecifier{false}, option, group, file, line, _module)
+        f, verbose::AbstractVerbositySpecifier{false}, option, file, line, _module)
 end
 
 """
-    @SciMLMessage(message_or_function, verbose, option, group)
+A macro that emits a log message based on the log level specified in the `option` of the `AbstractVerbositySpecifier` supplied.
 
-Emit a log message based on verbosity settings.
+`f_or_message` may be a message String, or a 0-argument function that returns a String.
 
-# Arguments
-- `message_or_function`: String message or 0-argument function returning a string
-- `verbose`: An `AbstractVerbositySpecifier` instance
-- `option`: Symbol for the specific option (e.g., `:test1`)
-- `group`: Symbol for the group containing the option (e.g., `:options`)
+## Usage
 
-# Examples
+To emit a simple string, `@SciMLMessage("message", verbosity, :option)` will emit a log message with the LogLevel specified in `verbosity` for the given `option`.
+
+`@SciMLMessage` can also be used to emit a log message coming from the evaluation of a 0-argument function. This function is resolved in the environment of the macro call.
+Therefore it can use variables from the surrounding environment. This may be useful if the log message writer wishes to carry out some calculations using existing variables
+and use them in the log message.
+
 ```julia
 # String message
 @SciMLMessage("Hello", verbose, :test1, :options)
@@ -99,53 +89,71 @@ Emit a log message based on verbosity settings.
 # Function for lazy evaluation
 x = 10
 y = 20
-@SciMLMessage(verbose, :test1, :options) do
+
+@SciMLMessage(verbosity, :option) do
     z = x + y
     "Sum: \$z"
 end
 ```
 """
+macro SciMLMessage(f_or_message, verb, option)
+    line = __source__.line
+    file = string(__source__.file)
+    _module = __module__
+    return :(emit_message(
+        $(esc(f_or_message)), $(esc(verb)), $option, $file, $line, $_module))
+end
+
+# For backwards compat to be not breaking. Also might be used in the future for log filtering.
 macro SciMLMessage(f_or_message, verb, option, group)
     line = __source__.line
     file = string(__source__.file)
     _module = __module__
     return :(emit_message(
-        $(esc(f_or_message)), $(esc(verb)), $option, $group, $file, $line, $_module))
+        $(esc(f_or_message)), $(esc(verb)), $option, $file, $line, $_module))
 end
 
 """
-    verbosity_to_int(verb::Verbosity.Type)
+        `verbosity_to_int(verb::Verbosity.LogLevel)`
+    Takes a `Verbosity.LogLevel` and gives a corresponding integer value.
+    Verbosity settings that use integers or enums that hold integers are relatively common.
+    This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
+    are mapped to an integer.
 
-Convert a `Verbosity.Type` to an integer.
-
-# Mapping
-- `None()` → 0
-- `Info()` → 1
-- `Warn()` → 2
-- `Error()` → 3
-- `Level(i)` → i
+    - Silent() => 0
+    - Info() => 1
+    - Warn() => 2
+    - Error() => 3
+    - Level(i) => i
 """
-function verbosity_to_int(verb::Verbosity.Type)
-    @match verb begin
-        Verbosity.None() => 0
-        Verbosity.Info() => 1
-        Verbosity.Warn() => 2
-        Verbosity.Error() => 3
-        Verbosity.Level(i) => i
+function verbosity_to_int(verb::Verbosity.LogLevel)
+    if verb isa Verbosity.Silent
+        return 0
+    elseif verb isa Verbosity.Info
+        return 1
+    elseif verb isa Verbosity.Warn
+        return 2
+    elseif verb isa Verbosity.Error
+        return 3
+    elseif verb isa Verbosity.Level
+        return verb.level
+    else
+        return 0
     end
 end
 
 """
-    verbosity_to_bool(verb::Verbosity.Type)
-
-Convert a `Verbosity.Type` to a boolean.
-
-Returns `false` for `Verbosity.None()`, `true` for all other levels.
+        `verbosity_to_bool(verb::Verbosity.LogLevel)`
+    Takes a `Verbosity.LogLevel` and gives a corresponding boolean value.
+    Verbosity settings that use booleans are relatively common.
+    This provides an interface so that these packages can be used with SciMLVerbosity.
+    If the verbosity is `Verbosity.Silent`, then `false` is returned. Otherwise, `true` is returned.
 """
-function verbosity_to_bool(verb::Verbosity.Type)
-    @match verb begin
-        Verbosity.None() => false
-        _ => true
+function verbosity_to_bool(verb::Verbosity.LogLevel)
+    if verb isa Verbosity.Silent
+        return false
+    else
+        return true
     end
 end
 
