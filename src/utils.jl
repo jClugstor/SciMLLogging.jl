@@ -59,15 +59,17 @@ end
 function emit_message(message::String, verbose::V,
         option, file, line, _module) where {V <: AbstractVerbositySpecifier{true}}
     level = message_level(verbose, option)
-
-    if !isnothing(level)
-        Base.@logmsg level message _file=file _line=line _module=_module
-    end
+    Base.@logmsg level message _file=file _line=line _module=_module
 end
 
 function emit_message(
         f, verbose::AbstractVerbositySpecifier{false}, option, file, line, _module)
 end
+
+function emit_message(
+    f, verbose::AbstractVerbositySpecifier{true}, option::Verbosity.Silent, file, line, _module)
+end
+
 
 """
 A macro that emits a log message based on the log level specified in the `option` of the `AbstractVerbositySpecifier` supplied.
