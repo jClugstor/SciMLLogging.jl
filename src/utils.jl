@@ -93,7 +93,7 @@ and use them in the log message.
 
 ```julia
 # String message
-@SciMLMessage("Hello", verbose, :test1, :options)
+@SciMLMessage("Hello", verbose, :test1)
 
 # Function for lazy evaluation
 x = 10
@@ -119,7 +119,7 @@ macro SciMLMessage(f_or_message, verb, option, group)
     file = string(__source__.file)
     _module = __module__
     return :(emit_message(
-        $(esc(f_or_message)), $(esc(verb)), $option, $file, $line, $_module))
+        $(esc(f_or_message)), $(esc(verb)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
 end
 
 """
