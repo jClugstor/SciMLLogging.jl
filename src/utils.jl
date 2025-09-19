@@ -45,29 +45,36 @@ function message_level(verbose::AbstractVerbositySpecifier{true}, option)
     end
 end
 
-function emit_message(
-        f::Function, verbose::V, option, file, line,
-        _module) where {V <: AbstractVerbositySpecifier{true}}
-    level = message_level(verbose, option)
-
-    if !isnothing(level)
-        message = f()
-        Base.@logmsg level message _file=file _line=line _module=_module
-    end
+function message_level(verbose::AbstractVerbositySpecifier{false}, option)
+    return nothing
 end
 
-function emit_message(message::String, verbose::V,
-        option, file, line, _module) where {V <: AbstractVerbositySpecifier{true}}
-    level = message_level(verbose, option)
+function emit_message(
+        f::Function, verbose::AbstractVerbositySpecifier{true}, level, file, line,
+        _module)
+    message = f()
     Base.@logmsg level message _file=file _line=line _module=_module
 end
 
-function emit_message(
-        f, verbose::AbstractVerbositySpecifier{false}, option, file, line, _module)
+function emit_message(message::String, verbose::AbstractVerbositySpecifier{true},
+        level, file, line, _module)
+    Base.@logmsg level message _file=file _line=line _module=_module
 end
 
+function emit_message(message::String, verbose::AbstractVerbositySpecifier{false},
+    level, file, line, _module)
+end 
+
 function emit_message(
-    f, verbose::AbstractVerbositySpecifier{true}, option::Verbosity.Silent, file, line, _module)
+        f, verbose::AbstractVerbositySpecifier{false}, level, file, line, _module)
+end
+
+function emit_message(message::String, verbose::AbstractVerbositySpecifier{true},
+    level::Nothing, file, line, _module)
+end 
+
+function emit_message(
+    f, verbose::AbstractVerbositySpecifier{true}, option::Nothing, file, line, _module)
 end
 
 
@@ -102,8 +109,8 @@ macro SciMLMessage(f_or_message, verb, option)
     line = __source__.line
     file = string(__source__.file)
     _module = __module__
-    return :(emit_message(
-        $(esc(f_or_message)), $(esc(verb)), $option, $file, $line, $_module))
+    expr = :(emit_message($(esc(f_or_message)), $(esc(verb)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
+    return expr
 end
 
 # For backwards compat to be not breaking. Also might be used in the future for log filtering.
