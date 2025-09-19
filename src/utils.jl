@@ -1,3 +1,22 @@
+"""
+    Verbosity
+
+A module defining verbosity levels and presets for SciMLLogging.
+
+## Log Levels
+- `Silent`: No output
+- `Info`: Informational messages
+- `Warn`: Warning messages
+- `Error`: Error messages
+- `Level(n)`: Custom log level with integer value `n`
+
+## Verbosity Presets
+- `None`: Minimal verbosity preset
+- `All`: Maximum verbosity preset
+- `Minimal`: Basic verbosity preset
+- `Standard`: Standard verbosity preset
+- `Detailed`: Detailed verbosity preset
+"""
 module Verbosity
     abstract type LogLevel end
     struct Silent <: LogLevel end

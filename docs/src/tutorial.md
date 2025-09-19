@@ -21,9 +21,9 @@ using SciMLLogging
 using Logging
 
 mutable struct MyOptions
-    startup::Verbosity.Type
-    progress::Verbosity.Type
-    warnings::Verbosity.Type
+    startup::Verbosity.LogLevel
+    progress::Verbosity.LogLevel
+    warnings::Verbosity.LogLevel
     
     function MyOptions(;
         startup = Verbosity.Info(),
