@@ -27,7 +27,7 @@ mutable struct MyOptions
     
     function MyOptions(;
         startup = Verbosity.Info(),
-        progress = Verbosity.None(),
+        progress = Verbosity.Silent(),
         warnings = Verbosity.Warn()
     )
         new(startup, progress, warnings)
@@ -58,9 +58,9 @@ The type parameter `T` determines whether verbosity is enabled:
 verbose = MyVerbosity{true}(MyOptions())
 
 # Emit messages at different levels
-@SciMLMessage("Application starting...", verbose, :startup, :options)
-@SciMLMessage("Processing item 1/100", verbose, :progress, :options)
-@SciMLMessage("Memory usage high", verbose, :warnings, :options)
+@SciMLMessage("Application starting...", verbose, :startup)
+@SciMLMessage("Processing item 1/100", verbose, :progress)
+@SciMLMessage("Memory usage high", verbose, :warnings)
 nothing # hide
 ```
 
@@ -71,7 +71,7 @@ SciMLLogging provides several built-in verbosity levels:
 ```@example tutorial2
 using SciMLLogging
 
-Verbosity.None()    # No output
+Verbosity.Silent()  # No output
 Verbosity.Info()    # Informational messages
 Verbosity.Warn()    # Warning messages
 Verbosity.Error()   # Error messages
@@ -102,7 +102,7 @@ verbose = MyVerbosity2{true}(MyOptions2())
 iter = 5
 total = 100
 
-@SciMLMessage(verbose, :progress, :options) do
+@SciMLMessage(verbose, :progress) do
     percentage = iter / total * 100
     "Progress: $iter/$total ($(round(percentage, digits=1))%)"
 end
@@ -132,7 +132,7 @@ end
 silent = MyVerbosity3{false}(MyOptions3())
 
 # This compiles to nothing - no runtime overhead
-@SciMLMessage("This won't be shown", silent, :startup, :options)
+@SciMLMessage("This won't be shown", silent, :startup)
 println("Message was not shown because verbosity is disabled")
 ```
 
@@ -158,8 +158,8 @@ using SciMLLogging
 is_verbose = verbosity_to_bool(Verbosity.Info())  # Returns true
 println("Verbosity.Info() converts to: $is_verbose")
 
-is_verbose = verbosity_to_bool(Verbosity.None())  # Returns false
-println("Verbosity.None() converts to: $is_verbose")
+is_verbose = verbosity_to_bool(Verbosity.Silent())  # Returns false
+println("Verbosity.Silent() converts to: $is_verbose")
 ```
 
 ## Custom Logger
@@ -193,7 +193,7 @@ verbose = LoggerTestVerbosity{true}(LoggerTestOptions())
 
 # Use the logger
 with_logger(logger) do
-    @SciMLMessage("This warning is logged", verbose, :test, :options)
+    @SciMLMessage("This warning is logged", verbose, :test)
 end
 
 # Clean up
@@ -234,21 +234,21 @@ end
 
 # Solver function
 function my_solver(problem, verbose::SolverVerbosity)
-    @SciMLMessage("Initializing solver...", verbose, :initialization, :options)
+    @SciMLMessage("Initializing solver...", verbose, :initialization)
     
     for i in 1:100
         # Do iteration work...
         
-        @SciMLMessage(verbose, :iterations, :options) do
+        @SciMLMessage(verbose, :iterations) do
             "Iteration $i: residual = $(round(rand(), digits=4))"
         end
         
         if rand() < 0.05  # Converged (5% chance per iteration for demo)
-            @SciMLMessage("Converged at iteration $i", verbose, :convergence, :options)
+            @SciMLMessage("Converged at iteration $i", verbose, :convergence)
             return i
         end
     end
-    @SciMLMessage("Failed to converge", verbose, :convergence, :options)
+    @SciMLMessage("Failed to converge", verbose, :convergence)
     return nothing
 end
 
@@ -289,13 +289,13 @@ end
     
     # Test that message is logged at correct level
     @test_logs (:info, "Test message") begin
-        @SciMLMessage("Test message", verbose, :level, :options)
+        @SciMLMessage("Test message", verbose, :level)
     end
-    
+
     # Test that disabled verbosity produces no output
     silent = TestVerbosity{false}(TestOptions())
     @test_logs min_level=Logging.Debug begin
-        @SciMLMessage("Should not appear", silent, :level, :options)
+        @SciMLMessage("Should not appear", silent, :level)
     end
 end
 ```
