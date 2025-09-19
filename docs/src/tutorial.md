@@ -12,37 +12,26 @@ SciMLLogging.jl provides three main components:
 
 ## Creating a Verbosity System
 
-### Step 1: Define Your Options
+### Step 1: Create Your Verbosity Type
 
-First, create a structure to hold your verbosity options:
+Define a type that inherits from `AbstractVerbositySpecifier{T}` with verbosity level fields:
 
 ```@example tutorial1
 using SciMLLogging
 using Logging
 
-mutable struct MyOptions
+struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
     startup::Verbosity.LogLevel
     progress::Verbosity.LogLevel
     warnings::Verbosity.LogLevel
-    
-    function MyOptions(;
+
+    function MyVerbosity{T}(;
         startup = Verbosity.Info(),
         progress = Verbosity.Silent(),
         warnings = Verbosity.Warn()
-    )
-        new(startup, progress, warnings)
+    ) where T
+        new{T}(startup, progress, warnings)
     end
-end
-nothing # hide
-```
-
-### Step 2: Create Your Verbosity Type
-
-Define a type that inherits from `AbstractVerbositySpecifier{T}`:
-
-```@example tutorial1
-struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    options::MyOptions
 end
 nothing # hide
 ```
@@ -51,11 +40,11 @@ The type parameter `T` determines whether verbosity is enabled:
 - `T = true`: Messages will be processed
 - `T = false`: No runtime overhead (compiled away)
 
-### Step 3: Use the Verbosity System
+### Step 2: Use the Verbosity System
 
 ```@example tutorial1
 # Create an enabled verbosity instance
-verbose = MyVerbosity{true}(MyOptions())
+verbose = MyVerbosity{true}()
 
 # Emit messages at different levels
 @SciMLMessage("Application starting...", verbose, :startup)
@@ -87,16 +76,13 @@ using SciMLLogging
 using Logging
 
 # Define the verbosity system (same as before)
-mutable struct MyOptions2
-    progress::Verbosity.Type
-    MyOptions2() = new(Verbosity.Info())
-end
-
 struct MyVerbosity2{T} <: AbstractVerbositySpecifier{T}
-    options::MyOptions2
+    progress::Verbosity.LogLevel
+
+    MyVerbosity2{T}(progress = Verbosity.Info()) where T = new{T}(progress)
 end
 
-verbose = MyVerbosity2{true}(MyOptions2())
+verbose = MyVerbosity2{true}()
 
 # Variables from surrounding scope
 iter = 5
@@ -119,17 +105,14 @@ For zero runtime cost when disabled:
 using SciMLLogging
 using Logging
 
-mutable struct MyOptions3
-    startup::Verbosity.Type
-    MyOptions3() = new(Verbosity.Info())
-end
-
 struct MyVerbosity3{T} <: AbstractVerbositySpecifier{T}
-    options::MyOptions3
+    startup::Verbosity.LogLevel
+
+    MyVerbosity3{T}(startup = Verbosity.Info()) where T = new{T}(startup)
 end
 
 # Disabled verbosity
-silent = MyVerbosity3{false}(MyOptions3())
+silent = MyVerbosity3{false}()
 
 # This compiles to nothing - no runtime overhead
 @SciMLMessage("This won't be shown", silent, :startup)
@@ -180,16 +163,13 @@ logger = SciMLLogger(
 )
 
 # Define a simple verbosity system for testing
-mutable struct LoggerTestOptions
-    test::Verbosity.Type
-    LoggerTestOptions() = new(Verbosity.Warn())
-end
-
 struct LoggerTestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    options::LoggerTestOptions
+    test::Verbosity.LogLevel
+
+    LoggerTestVerbosity{T}(test = Verbosity.Warn()) where T = new{T}(test)
 end
 
-verbose = LoggerTestVerbosity{true}(LoggerTestOptions())
+verbose = LoggerTestVerbosity{true}()
 
 # Use the logger
 with_logger(logger) do
@@ -212,24 +192,19 @@ using Logging
 using Random
 Random.seed!(123) # For reproducibility
 
-# Define verbosity options
-mutable struct SolverOptions
-    initialization::Verbosity.Type
-    iterations::Verbosity.Type
-    convergence::Verbosity.Type
-    
-    function SolverOptions(;
-        initialization = Verbosity.Info(),
-        iterations = Verbosity.None(),
-        convergence = Verbosity.Info()
-    )
-        new(initialization, iterations, convergence)
-    end
-end
-
 # Create verbosity type
 struct SolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    options::SolverOptions
+    initialization::Verbosity.LogLevel
+    iterations::Verbosity.LogLevel
+    convergence::Verbosity.LogLevel
+
+    function SolverVerbosity{T}(;
+        initialization = Verbosity.Info(),
+        iterations = Verbosity.Silent(),
+        convergence = Verbosity.Info()
+    ) where T
+        new{T}(initialization, iterations, convergence)
+    end
 end
 
 # Solver function
@@ -254,13 +229,13 @@ end
 
 # Use the solver with verbosity
 println("Running solver with verbosity enabled:")
-verbose = SolverVerbosity{true}(SolverOptions())
+verbose = SolverVerbosity{true}()
 result = my_solver("problem", verbose)
 println("Solver returned: $result")
 
 println("\nRunning solver in silent mode:")
 # Or with silent mode
-silent = SolverVerbosity{false}(SolverOptions())
+silent = SolverVerbosity{false}()
 result = my_solver("problem", silent)  # No output
 println("Solver returned: $result (no messages shown)")
 ```
@@ -275,25 +250,22 @@ using Logging
 using Test
 
 # Define a simple verbosity system for testing
-mutable struct TestOptions
-    level::Verbosity.Type
-    TestOptions() = new(Verbosity.Info())
-end
-
 struct TestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    options::TestOptions
+    level::Verbosity.LogLevel
+
+    TestVerbosity{T}(level = Verbosity.Info()) where T = new{T}(level)
 end
 
 @testset "Verbosity Tests" begin
-    verbose = TestVerbosity{true}(TestOptions())
-    
+    verbose = TestVerbosity{true}()
+
     # Test that message is logged at correct level
     @test_logs (:info, "Test message") begin
         @SciMLMessage("Test message", verbose, :level)
     end
 
     # Test that disabled verbosity produces no output
-    silent = TestVerbosity{false}(TestOptions())
+    silent = TestVerbosity{false}()
     @test_logs min_level=Logging.Debug begin
         @SciMLMessage("Should not appear", silent, :level)
     end
