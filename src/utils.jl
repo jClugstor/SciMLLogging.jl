@@ -93,7 +93,7 @@ function emit_message(message::String, verbose::AbstractVerbositySpecifier{true}
 end 
 
 function emit_message(
-    f, verbose::AbstractVerbositySpecifier{true}, option::Nothing, file, line, _module)
+    f::Function, verbose::AbstractVerbositySpecifier{true}, level::Nothing, file, line, _module)
 end
 
 
