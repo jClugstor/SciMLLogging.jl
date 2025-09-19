@@ -23,6 +23,8 @@ Verbosity
 verbosity_to_int
 verbosity_to_bool
 SciMLLogger
+set_logging_backend
+get_logging_backend
 ```
 
 ## Index
