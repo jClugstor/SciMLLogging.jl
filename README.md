@@ -21,29 +21,19 @@ Consistent logging patterns across the SciML ecosystem
 # Basic Usage
 
 ```julia
-using SciMLVerbosity
+using SciMLLogging
 using Logging
 
 # Create a simple verbosity structure
-mutable struct MyVerbosityOptions
-    algorithm_choice::Verbosity.Type
-    iteration_progress::Verbosity.Type
-
-    function MyVerbosityOptions(;
-            algorithm_choice = Verbosity.Warn(),
-            iteration_progress = Verbosity.Info()
-    )
-        new(algorithm_choice, iteration_progress)
-    end
-end
-
 struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    options::MyVerbosityOptions
+    algorithm_choice::Verbosity.LogLevel
+    iteration_progress::Verbosity.LogLevel
 
     function MyVerbosity{T}(;
-            options = MyVerbosityOptions()
+            algorithm_choice = Verbosity.Warn(),
+            iteration_progress = Verbosity.Info()
     ) where {T}
-        new{T}(options)
+        new{T}(algorithm_choice, iteration_progress)
     end
 end
 
@@ -51,11 +41,11 @@ end
 verbose = MyVerbosity{true}()
 
 # Log messages at different levels
-@SciMLMessage("Selected algorithm: GMRES", verbose, :algorithm_choice, :options)
-@SciMLMessage("Iteration 5/100 complete", verbose, :iteration_progress, :options)
+@SciMLMessage("Selected algorithm: GMRES", verbose, :algorithm_choice)
+@SciMLMessage("Iteration 5/100 complete", verbose, :iteration_progress)
 
 # Use a function to create the message
-@SciMLMessage(verbose, :iteration_progress, :options) do
+@SciMLMessage(verbose, :iteration_progress) do
     iter = 10
     total = 100
     progress = iter/total * 100
@@ -65,16 +55,13 @@ end
 
 # Verbosity Levels
 
-SciMLVerbosity supports several verbosity levels:
+SciMLLogging supports several verbosity levels:
 
-  - `Verbosity.None()`: No output
+  - `Verbosity.Silent()`: No output
   - `Verbosity.Info()`: Informational messages
   - `Verbosity.Warn()`: Warning messages
   - `Verbosity.Error()`: Error messages
   - `Verbosity.Level(n)`: Custom logging level (using Julia's LogLevel(n))
-  - `Verbosity.Edge()`: Special case for edge behaviors
-  - `Verbosity.All()`: Maximum verbosity
-  - `Verbosity.Default()`: Default verbosity settings
 
 # Creating Custom Verbosity Types
 
@@ -84,41 +71,20 @@ SciMLVerbosity supports several verbosity levels:
     Example:
 
 ```julia
-# Define option groups
-mutable struct SolverOptions
-    iterations::Verbosity.Type
-    convergence::Verbosity.Type
-
-    function SolverOptions(;
-            iterations = Verbosity.Info(),
-            convergence = Verbosity.Warn()
-    )
-        new(iterations, convergence)
-    end
-end
-
-mutable struct PerformanceOptions
-    timing::Verbosity.Type
-    memory::Verbosity.Type
-
-    function PerformanceOptions(;
-            timing = Verbosity.None(),
-            memory = Verbosity.None()
-    )
-        new(timing, memory)
-    end
-end
-
-# Main verbosity struct
+# Main verbosity struct with direct LogLevel fields
 struct MyAppVerbosity{T} <: AbstractVerbositySpecifier{T}
-    solver::SolverOptions
-    performance::PerformanceOptions
+    solver_iterations::Verbosity.LogLevel
+    solver_convergence::Verbosity.LogLevel
+    performance_timing::Verbosity.LogLevel
+    performance_memory::Verbosity.LogLevel
 
     function MyAppVerbosity{T}(;
-            solver = SolverOptions(),
-            performance = PerformanceOptions()
+            solver_iterations = Verbosity.Info(),
+            solver_convergence = Verbosity.Warn(),
+            performance_timing = Verbosity.Silent(),
+            performance_memory = Verbosity.Silent()
     ) where {T}
-        new{T}(solver, performance)
+        new{T}(solver_iterations, solver_convergence, performance_timing, performance_memory)
     end
 end
 
@@ -154,9 +120,9 @@ To completely disable verbosity without changing your code:
 silent = MyVerbosity{false}()
 
 # This won't produce any output
-@SciMLMessage("This message won't be shown", silent, :algorithm_choice, :options)
+@SciMLMessage("This message won't be shown", silent, :algorithm_choice)
 ```
 
 # License
 
-SciMLVerbosity.jl is licensed under the MIT License.
+SciMLLogging.jl is licensed under the MIT License.
