@@ -37,6 +37,9 @@ end
 
 using .Verbosity
 
+# Load preference for logging backend - defaults to "logging" for Julia Logging system
+const LOGGING_BACKEND = @load_preference("logging_backend", "logging")
+
 """
 AbstractVerbositySpecifier{T}
     Base for types which specify which log messages are emitted at what level.
@@ -72,12 +75,20 @@ function emit_message(
         f::Function, verbose::AbstractVerbositySpecifier{true}, level, file, line,
         _module)
     message = f()
-    Base.@logmsg level message _file=file _line=line _module=_module
+    @static if LOGGING_BACKEND == "core"
+        Core.println(message)
+    else
+        Base.@logmsg level message _file=file _line=line _module=_module
+    end
 end
 
 function emit_message(message::String, verbose::AbstractVerbositySpecifier{true},
         level, file, line, _module)
-    Base.@logmsg level message _file=file _line=line _module=_module
+    @static if LOGGING_BACKEND == "core"
+        Core.println(message)
+    else
+        Base.@logmsg level message _file=file _line=line _module=_module
+    end
 end
 
 function emit_message(message::String, verbose::AbstractVerbositySpecifier{false},
@@ -183,6 +194,33 @@ function verbosity_to_bool(verb::Verbosity.LogLevel)
     else
         return true
     end
+end
+
+"""
+    set_logging_backend(backend::String)
+
+Set the logging backend preference. Valid options are:
+- "logging": Use Julia's standard Logging system (default)
+- "core": Use Core.println for simple output
+
+Note: You must restart Julia for this preference change to take effect.
+"""
+function set_logging_backend(backend::String)
+    if backend in ["logging", "core"]
+        @set_preferences!("logging_backend" => backend)
+        @info("Logging backend set to '$backend'. Restart Julia for changes to take effect!")
+    else
+        throw(ArgumentError("Invalid backend '$backend'. Valid options are: 'logging', 'core'"))
+    end
+end
+
+"""
+    get_logging_backend() -> String
+
+Get the current logging backend preference.
+"""
+function get_logging_backend()
+    return @load_preference("logging_backend", "logging")
 end
 
 """
