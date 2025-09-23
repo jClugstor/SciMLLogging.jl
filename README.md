@@ -26,12 +26,12 @@ using Logging
 
 # Create a simple verbosity structure
 struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    algorithm_choice::Verbosity.LogLevel
-    iteration_progress::Verbosity.LogLevel
+    algorithm_choice::SciMLLogging.LogLevel
+    iteration_progress::SciMLLogging.LogLevel
 
     function MyVerbosity{T}(;
-            algorithm_choice = Verbosity.Warn(),
-            iteration_progress = Verbosity.Info()
+            algorithm_choice = SciMLLogging.Warn(),
+            iteration_progress = SciMLLogging.Info()
     ) where {T}
         new{T}(algorithm_choice, iteration_progress)
     end
@@ -73,16 +73,16 @@ SciMLLogging supports several verbosity levels:
 ```julia
 # Main verbosity struct with direct LogLevel fields
 struct MyAppVerbosity{T} <: AbstractVerbositySpecifier{T}
-    solver_iterations::Verbosity.LogLevel
-    solver_convergence::Verbosity.LogLevel
-    performance_timing::Verbosity.LogLevel
-    performance_memory::Verbosity.LogLevel
+    solver_iterations::SciMLLogging.LogLevel
+    solver_convergence::SciMLLogging.LogLevel
+    performance_timing::SciMLLogging.LogLevel
+    performance_memory::SciMLLogging.LogLevel
 
     function MyAppVerbosity{T}(;
-            solver_iterations = Verbosity.Info(),
-            solver_convergence = Verbosity.Warn(),
-            performance_timing = Verbosity.Silent(),
-            performance_memory = Verbosity.Silent()
+            solver_iterations = SciMLLogging.Info(),
+            solver_convergence = SciMLLogging.Warn(),
+            performance_timing = SciMLLogging.Silent(),
+            performance_memory = SciMLLogging.Silent()
     ) where {T}
         new{T}(solver_iterations, solver_convergence, performance_timing, performance_memory)
     end
