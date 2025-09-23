@@ -8,7 +8,18 @@ CurrentModule = SciMLLogging
 
 ```@docs
 AbstractVerbositySpecifier
-Verbosity
+LogLevel
+Silent
+Info
+Warn
+Error
+Level
+VerbosityPreset
+None
+All
+Minimal
+Standard
+Detailed
 ```
 
 ## Macros
