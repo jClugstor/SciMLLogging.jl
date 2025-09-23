@@ -21,14 +21,14 @@ using SciMLLogging
 using Logging
 
 struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    startup::Verbosity.LogLevel
-    progress::Verbosity.LogLevel
-    warnings::Verbosity.LogLevel
+    startup::SciMLLogging.LogLevel
+    progress::SciMLLogging.LogLevel
+    warnings::SciMLLogging.LogLevel
 
     function MyVerbosity{T}(;
-        startup = Verbosity.Info(),
-        progress = Verbosity.Silent(),
-        warnings = Verbosity.Warn()
+        startup = SciMLLogging.Info(),
+        progress = SciMLLogging.Silent(),
+        warnings = SciMLLogging.Warn()
     ) where T
         new{T}(startup, progress, warnings)
     end

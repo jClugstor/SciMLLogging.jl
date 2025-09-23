@@ -57,11 +57,11 @@ end
 
 SciMLLogging supports several verbosity levels:
 
-  - `Verbosity.Silent()`: No output
-  - `Verbosity.Info()`: Informational messages
-  - `Verbosity.Warn()`: Warning messages
-  - `Verbosity.Error()`: Error messages
-  - `Verbosity.Level(n)`: Custom logging level (using Julia's LogLevel(n))
+  - `Silent()`: No output
+  - `Info()`: Informational messages
+  - `Warn()`: Warning messages
+  - `Error()`: Error messages
+  - `Level(n)`: Custom logging level (using Julia's LogLevel(n))
 
 # Creating Custom Verbosity Types
 

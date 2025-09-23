@@ -4,6 +4,7 @@ import Logging
 using LoggingExtras
 using Preferences
 
+include("verbosity.jl")
 include("utils.jl")
 
 # Export public API
