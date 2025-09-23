@@ -65,9 +65,9 @@ end
 
 @testset "Verbosity presets" begin
     # Test with different presets
-    verbose_all = TestVerbosity(All())
-    verbose_minimal = TestVerbosity(Minimal())
-    verbose_none = TestVerbosity(None())
+    verbose_all = TestVerbosity(SciMLLogging.All())
+    verbose_minimal = TestVerbosity(SciMLLogging.Minimal())
+    verbose_none = TestVerbosity(SciMLLogging.None())
 
     # All preset should log info level messages
     @test_logs (:info, "All preset test") @SciMLMessage("All preset test", verbose_all, :test1)
