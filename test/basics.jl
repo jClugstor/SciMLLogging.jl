@@ -23,16 +23,16 @@ TestVerbosity() = TestVerbosity{true}()
 TestVerbosity(enabled::Bool) = enabled ? TestVerbosity{true}() : TestVerbosity{false}()
 
 function TestVerbosity(preset::VerbosityPreset)
-    if preset isa None
+    if preset isa SciMLLogging.None
         TestVerbosity{false}()
-    elseif preset isa All
+    elseif preset isa SciMLLogging.All
         TestVerbosity{true}(
             test1 = SciMLLogging.Info(),
             test2 = SciMLLogging.Info(),
             test3 = SciMLLogging.Info(),
             test4 = SciMLLogging.Info()
         )
-    elseif preset isa Minimal
+    elseif preset isa SciMLLogging.Minimal
         TestVerbosity{true}(
             test1 = SciMLLogging.Error(),
             test2 = SciMLLogging.Silent(),
