@@ -21,14 +21,14 @@ using SciMLLogging
 using Logging
 
 struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    startup::Verbosity.LogLevel
-    progress::Verbosity.LogLevel
-    warnings::Verbosity.LogLevel
+    startup::SciMLLogging.LogLevel
+    progress::SciMLLogging.LogLevel
+    warnings::SciMLLogging.LogLevel
 
     function MyVerbosity{T}(;
-        startup = Verbosity.Info(),
-        progress = Verbosity.Silent(),
-        warnings = Verbosity.Warn()
+        startup = SciMLLogging.Info(),
+        progress = SciMLLogging.Silent(),
+        warnings = SciMLLogging.Warn()
     ) where T
         new{T}(startup, progress, warnings)
     end
@@ -60,11 +60,11 @@ SciMLLogging provides several built-in verbosity levels:
 ```@example tutorial2
 using SciMLLogging
 
-Verbosity.Silent()  # No output
-Verbosity.Info()    # Informational messages
-Verbosity.Warn()    # Warning messages
-Verbosity.Error()   # Error messages
-Verbosity.Level(-1000)  # Custom log level with integer n
+SciMLLogging.Silent()  # No output
+SciMLLogging.Info()    # Informational messages
+SciMLLogging.Warn()    # Warning messages
+SciMLLogging.Error()   # Error messages
+SciMLLogging.Level(-1000)  # Custom log level with integer n
 ```
 
 ## Dynamic Messages
@@ -77,9 +77,9 @@ using Logging
 
 # Define the verbosity system (same as before)
 struct MyVerbosity2{T} <: AbstractVerbositySpecifier{T}
-    progress::Verbosity.LogLevel
+    progress::SciMLLogging.LogLevel
 
-    MyVerbosity2{T}(progress = Verbosity.Info()) where T = new{T}(progress)
+    MyVerbosity2{T}(progress = SciMLLogging.Info()) where T = new{T}(progress)
 end
 
 verbose = MyVerbosity2{true}()
@@ -106,9 +106,9 @@ using SciMLLogging
 using Logging
 
 struct MyVerbosity3{T} <: AbstractVerbositySpecifier{T}
-    startup::Verbosity.LogLevel
+    startup::SciMLLogging.LogLevel
 
-    MyVerbosity3{T}(startup = Verbosity.Info()) where T = new{T}(startup)
+    MyVerbosity3{T}(startup = SciMLLogging.Info()) where T = new{T}(startup)
 end
 
 # Disabled verbosity
@@ -128,7 +128,7 @@ For compatibility with packages using integer verbosity levels:
 ```@example tutorial5
 using SciMLLogging
 
-level = verbosity_to_int(Verbosity.Warn())  # Returns 2
+level = verbosity_to_int(SciMLLogging.Warn())  # Returns 2
 ```
 
 ### Converting to Boolean
@@ -138,11 +138,11 @@ For packages using boolean verbosity flags:
 ```@example tutorial6
 using SciMLLogging
 
-is_verbose = verbosity_to_bool(Verbosity.Info())  # Returns true
-println("Verbosity.Info() converts to: $is_verbose")
+is_verbose = verbosity_to_bool(SciMLLogging.Info())  # Returns true
+println("SciMLLogging.Info() converts to: $is_verbose")
 
-is_verbose = verbosity_to_bool(Verbosity.Silent())  # Returns false
-println("Verbosity.Silent() converts to: $is_verbose")
+is_verbose = verbosity_to_bool(SciMLLogging.Silent())  # Returns false
+println("SciMLLogging.Silent() converts to: $is_verbose")
 ```
 
 ## Custom Logger
@@ -164,9 +164,9 @@ logger = SciMLLogger(
 
 # Define a simple verbosity system for testing
 struct LoggerTestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    test::Verbosity.LogLevel
+    test::SciMLLogging.LogLevel
 
-    LoggerTestVerbosity{T}(test = Verbosity.Warn()) where T = new{T}(test)
+    LoggerTestVerbosity{T}(test = SciMLLogging.Warn()) where T = new{T}(test)
 end
 
 verbose = LoggerTestVerbosity{true}()
@@ -194,14 +194,14 @@ Random.seed!(123) # For reproducibility
 
 # Create verbosity type
 struct SolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::Verbosity.LogLevel
-    iterations::Verbosity.LogLevel
-    convergence::Verbosity.LogLevel
+    initialization::SciMLLogging.LogLevel
+    iterations::SciMLLogging.LogLevel
+    convergence::SciMLLogging.LogLevel
 
     function SolverVerbosity{T}(;
-        initialization = Verbosity.Info(),
-        iterations = Verbosity.Silent(),
-        convergence = Verbosity.Info()
+        initialization = SciMLLogging.Info(),
+        iterations = SciMLLogging.Silent(),
+        convergence = SciMLLogging.Info()
     ) where T
         new{T}(initialization, iterations, convergence)
     end
@@ -251,9 +251,9 @@ using Test
 
 # Define a simple verbosity system for testing
 struct TestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    level::Verbosity.LogLevel
+    level::SciMLLogging.LogLevel
 
-    TestVerbosity{T}(level = Verbosity.Info()) where T = new{T}(level)
+    TestVerbosity{T}(level = SciMLLogging.Info()) where T = new{T}(level)
 end
 
 @testset "Verbosity Tests" begin

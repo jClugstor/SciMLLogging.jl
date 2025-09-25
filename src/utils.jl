@@ -1,41 +1,3 @@
-"""
-    Verbosity
-
-A module defining verbosity levels and presets for SciMLLogging.
-
-## Log Levels
-- `Silent`: No output
-- `Info`: Informational messages
-- `Warn`: Warning messages
-- `Error`: Error messages
-- `Level(n)`: Custom log level with integer value `n`
-
-## Verbosity Presets
-- `None`: Minimal verbosity preset
-- `All`: Maximum verbosity preset
-- `Minimal`: Basic verbosity preset
-- `Standard`: Standard verbosity preset
-- `Detailed`: Detailed verbosity preset
-"""
-module Verbosity
-    abstract type LogLevel end
-    struct Silent <: LogLevel end
-    struct Info <: LogLevel end
-    struct Warn <: LogLevel end
-    struct Error <: LogLevel end
-    struct Level <: LogLevel
-        level::Int
-    end
-
-    abstract type VerbosityPreset end
-    struct None <: VerbosityPreset end
-    struct All <: VerbosityPreset end
-    struct Minimal <: VerbosityPreset end
-    struct Standard <: VerbosityPreset end
-    struct Detailed <: VerbosityPreset end
-end
-
-using .Verbosity
 
 # Load preference for logging backend - defaults to "logging" for Julia Logging system
 const LOGGING_BACKEND = @load_preference("logging_backend", "logging")
@@ -52,15 +14,15 @@ abstract type AbstractVerbositySpecifier{T} end
 function message_level(verbose::AbstractVerbositySpecifier{true}, option)
     opt_level = getproperty(verbose, option)
 
-    if opt_level isa Verbosity.Silent
+    if opt_level isa Silent
         return nothing
-    elseif opt_level isa Verbosity.Info
+    elseif opt_level isa Info
         return Logging.Info
-    elseif opt_level isa Verbosity.Warn
+    elseif opt_level isa Warn
         return Logging.Warn
-    elseif opt_level isa Verbosity.Error
+    elseif opt_level isa Error
         return Logging.Error
-    elseif opt_level isa Verbosity.Level
+    elseif opt_level isa Level
         return Logging.LogLevel(opt_level.level)
     else
         return nothing
@@ -153,8 +115,8 @@ macro SciMLMessage(f_or_message, verb, option, group)
 end
 
 """
-        `verbosity_to_int(verb::Verbosity.LogLevel)`
-    Takes a `Verbosity.LogLevel` and gives a corresponding integer value.
+        `verbosity_to_int(verb::LogLevel)`
+    Takes a `LogLevel` and gives a corresponding integer value.
     Verbosity settings that use integers or enums that hold integers are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
     are mapped to an integer.
@@ -165,16 +127,16 @@ end
     - Error() => 3
     - Level(i) => i
 """
-function verbosity_to_int(verb::Verbosity.LogLevel)
-    if verb isa Verbosity.Silent
+function verbosity_to_int(verb::LogLevel)
+    if verb isa Silent
         return 0
-    elseif verb isa Verbosity.Info
+    elseif verb isa Info
         return 1
-    elseif verb isa Verbosity.Warn
+    elseif verb isa Warn
         return 2
-    elseif verb isa Verbosity.Error
+    elseif verb isa Error
         return 3
-    elseif verb isa Verbosity.Level
+    elseif verb isa Level
         return verb.level
     else
         return 0
@@ -182,14 +144,14 @@ function verbosity_to_int(verb::Verbosity.LogLevel)
 end
 
 """
-        `verbosity_to_bool(verb::Verbosity.LogLevel)`
-    Takes a `Verbosity.LogLevel` and gives a corresponding boolean value.
+        `verbosity_to_bool(verb::LogLevel)`
+    Takes a `LogLevel` and gives a corresponding boolean value.
     Verbosity settings that use booleans are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity.
-    If the verbosity is `Verbosity.Silent`, then `false` is returned. Otherwise, `true` is returned.
+    If the verbosity is `Silent`, then `false` is returned. Otherwise, `true` is returned.
 """
-function verbosity_to_bool(verb::Verbosity.LogLevel)
-    if verb isa Verbosity.Silent
+function verbosity_to_bool(verb::LogLevel)
+    if verb isa Silent
         return false
     else
         return true

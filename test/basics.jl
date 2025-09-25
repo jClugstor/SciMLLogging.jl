@@ -1,20 +1,20 @@
 using SciMLLogging
-using SciMLLogging: Verbosity, AbstractVerbositySpecifier, @SciMLMessage
+using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset
 using Logging
 using Test
 
 # Structs for testing package - simplified structure
 struct TestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    test1::Verbosity.LogLevel
-    test2::Verbosity.LogLevel
-    test3::Verbosity.LogLevel
-    test4::Verbosity.LogLevel
+    test1::SciMLLogging.LogLevel
+    test2::SciMLLogging.LogLevel
+    test3::SciMLLogging.LogLevel
+    test4::SciMLLogging.LogLevel
 
     function TestVerbosity{T}(;
-            test1 = Verbosity.Warn(),
-            test2 = Verbosity.Info(),
-            test3 = Verbosity.Error(),
-            test4 = Verbosity.Silent()) where T
+            test1 = SciMLLogging.Warn(),
+            test2 = SciMLLogging.Info(),
+            test3 = SciMLLogging.Error(),
+            test4 = SciMLLogging.Silent()) where {T}
         new{T}(test1, test2, test3, test4)
     end
 end
@@ -22,22 +22,22 @@ end
 TestVerbosity() = TestVerbosity{true}()
 TestVerbosity(enabled::Bool) = enabled ? TestVerbosity{true}() : TestVerbosity{false}()
 
-function TestVerbosity(preset::Verbosity.VerbosityPreset)
-    if preset isa Verbosity.None
+function TestVerbosity(preset::VerbosityPreset)
+    if preset isa SciMLLogging.None
         TestVerbosity{false}()
-    elseif preset isa Verbosity.All
+    elseif preset isa SciMLLogging.All
         TestVerbosity{true}(
-            test1 = Verbosity.Info(),
-            test2 = Verbosity.Info(),
-            test3 = Verbosity.Info(),
-            test4 = Verbosity.Info()
+            test1 = SciMLLogging.Info(),
+            test2 = SciMLLogging.Info(),
+            test3 = SciMLLogging.Info(),
+            test4 = SciMLLogging.Info()
         )
-    elseif preset isa Verbosity.Minimal
+    elseif preset isa SciMLLogging.Minimal
         TestVerbosity{true}(
-            test1 = Verbosity.Error(),
-            test2 = Verbosity.Silent(),
-            test3 = Verbosity.Error(),
-            test4 = Verbosity.Silent()
+            test1 = SciMLLogging.Error(),
+            test2 = SciMLLogging.Silent(),
+            test3 = SciMLLogging.Error(),
+            test4 = SciMLLogging.Silent()
         )
     else
         TestVerbosity{true}()
@@ -65,9 +65,9 @@ end
 
 @testset "Verbosity presets" begin
     # Test with different presets
-    verbose_all = TestVerbosity(Verbosity.All())
-    verbose_minimal = TestVerbosity(Verbosity.Minimal())
-    verbose_none = TestVerbosity(Verbosity.None())
+    verbose_all = TestVerbosity(SciMLLogging.All())
+    verbose_minimal = TestVerbosity(SciMLLogging.Minimal())
+    verbose_none = TestVerbosity(SciMLLogging.None())
 
     # All preset should log info level messages
     @test_logs (:info, "All preset test") @SciMLMessage("All preset test", verbose_all, :test1)
@@ -99,5 +99,29 @@ end
     x = 42
     @test_logs (:error, "Backwards function test: 42") @SciMLMessage(verbose, :test3, :ignored_group) do
         "Backwards function test: $x"
+    end
+end
+
+@testset "Nested @SciMLMessage macros" begin
+    verbose = TestVerbosity{true}()
+
+    # Test that @SciMLMessage can be called inside another @SciMLMessage function block
+    @test_logs (:warn, "Inner message from nested call") (:info, "Outer message with nested result") begin
+        result = @SciMLMessage(verbose, :test2) do
+            @SciMLMessage("Inner message from nested call", verbose, :test1)
+            "Outer message with nested result"
+        end
+    end
+
+    # Test nested with both function-based inner and outer
+    counter = 0
+    @test_logs (:info, "Inner computation: 5") (:warn, "Outer result: 5") begin
+        @SciMLMessage(verbose, :test1) do
+            inner_result = @SciMLMessage(verbose, :test2) do
+                counter = 5
+                "Inner computation: $counter"
+            end
+            "Outer result: $counter"
+        end
     end
 end
