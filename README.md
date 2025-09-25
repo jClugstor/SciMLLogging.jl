@@ -1,6 +1,6 @@
 # SciMLLogging
-
-[![Build Status](https://github.com/jClugstor/SciMLVerbosity.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jClugstor/SciMLVerbosity.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)]([https://docs.sciml.ai/OrdinaryDiffEq/stable/](https://docs.sciml.ai/SciMLLogging/dev/))
+[![Build Status](https://github.com/SciML/SciMLVerbosity.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/SciML/SciMLVerbosity.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 A flexible verbosity control system for the SciML ecosystem that allows fine-grained control over logging, warnings.
 
