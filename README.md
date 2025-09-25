@@ -61,7 +61,7 @@ SciMLLogging supports several verbosity levels:
   - `InfoLevel()`: Informational messages
   - `WarnLevel()`: Warning messages
   - `ErrorLevel()`: Error messages
-  - `CustomLevel(n)`: Custom logging level (using Julia's LogLevel(n))
+  - `CustomLevel(n)`: Custom logging level with integer value `n`
 
 # Creating Custom Verbosity Types
 

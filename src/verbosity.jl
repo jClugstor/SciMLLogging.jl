@@ -5,10 +5,10 @@ Abstract base type for all verbosity log levels in SciMLLogging.
 
 Log levels determine the severity/importance of messages. Concrete subtypes include:
 - `Silent`: No output
-- `Info`: Informational messages
-- `Warn`: Warning messages
-- `Error`: Error messages
-- `Level(n)`: Custom log level with integer value `n`
+- `InfoLevel`: Informational messages
+- `WarnLevel`: Warning messages
+- `ErrorLevel`: Error messages
+- `CustomLevel(n)`: Custom log level with integer value `n`
 """
 abstract type MessageLevel end
 
@@ -21,7 +21,7 @@ no messages will be emitted for that category.
 struct Silent <: MessageLevel end
 
 """
-    Info <: MessageLevel
+    InfoLevel <: MessageLevel
 
 Informational log level. Messages at this level provide general information
 about the progress or state of the computation.
@@ -29,7 +29,7 @@ about the progress or state of the computation.
 struct InfoLevel <: MessageLevel end
 
 """
-    Warn <: MessageLevel
+    WarnLevel <: MessageLevel
 
 Warning log level. Messages at this level indicate potential issues or
 situations that may require attention but don't prevent execution.
@@ -37,7 +37,7 @@ situations that may require attention but don't prevent execution.
 struct WarnLevel <: MessageLevel end
 
 """
-    Error <: MessageLevel
+    ErrorLevel <: MessageLevel
 
 Error log level. Messages at this level indicate serious problems or
 failures in the computation.

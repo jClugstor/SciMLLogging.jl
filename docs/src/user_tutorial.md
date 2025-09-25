@@ -49,9 +49,9 @@ result = solve_problem(problem, verbose = Detailed())
 SciMLLogging packages typically categorize their messages into different types:
 
 - **Silent**: No output at all
-- **Info**: General informational messages
-- **Warn**: Warning messages about potential issues
-- **Error**: Error messages (usually still shown even in quiet modes)
+- **InfoLevel**: General informational messages
+- **WarnLevel**: Warning messages about potential issues
+- **ErrorLevel**: Error messages (usually still shown even in quiet modes)
 
 ## Common Usage Patterns
 
