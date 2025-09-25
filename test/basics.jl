@@ -1,5 +1,5 @@
 using SciMLLogging
-using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset, MessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent
+using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset, MessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All
 using Logging
 using Test
 
