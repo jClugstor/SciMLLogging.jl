@@ -16,13 +16,13 @@ function message_level(verbose::AbstractVerbositySpecifier{true}, option)
 
     if opt_level isa Silent
         return nothing
-    elseif opt_level isa Info
+    elseif opt_level isa InfoLevel
         return Logging.Info
-    elseif opt_level isa Warn
+    elseif opt_level isa WarnLevel
         return Logging.Warn
-    elseif opt_level isa Error
+    elseif opt_level isa ErrorLevel
         return Logging.Error
-    elseif opt_level isa Level
+    elseif opt_level isa CustomLevel
         return Logging.LogLevel(opt_level.level)
     else
         return nothing
@@ -115,28 +115,28 @@ macro SciMLMessage(f_or_message, verb, option, group)
 end
 
 """
-        `verbosity_to_int(verb::LogLevel)`
-    Takes a `LogLevel` and gives a corresponding integer value.
+        `verbosity_to_int(verb::MessageLevel)`
+    Takes a `MessageLevel` and gives a corresponding integer value.
     Verbosity settings that use integers or enums that hold integers are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
     are mapped to an integer.
 
     - Silent() => 0
-    - Info() => 1
-    - Warn() => 2
-    - Error() => 3
-    - Level(i) => i
+    - InfoLevel() => 1
+    - WarnLevel() => 2
+    - ErrorLevel() => 3
+    - CustomLevel(i) => i
 """
-function verbosity_to_int(verb::LogLevel)
+function verbosity_to_int(verb::MessageLevel)
     if verb isa Silent
         return 0
-    elseif verb isa Info
+    elseif verb isa InfoLevel
         return 1
-    elseif verb isa Warn
+    elseif verb isa WarnLevel
         return 2
-    elseif verb isa Error
+    elseif verb isa ErrorLevel
         return 3
-    elseif verb isa Level
+    elseif verb isa CustomLevel
         return verb.level
     else
         return 0
@@ -144,13 +144,13 @@ function verbosity_to_int(verb::LogLevel)
 end
 
 """
-        `verbosity_to_bool(verb::LogLevel)`
-    Takes a `LogLevel` and gives a corresponding boolean value.
+        `verbosity_to_bool(verb::MessageLevel)`
+    Takes a `MessageLevel` and gives a corresponding boolean value.
     Verbosity settings that use booleans are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity.
     If the verbosity is `Silent`, then `false` is returned. Otherwise, `true` is returned.
 """
-function verbosity_to_bool(verb::LogLevel)
+function verbosity_to_bool(verb::MessageLevel)
     if verb isa Silent
         return false
     else

@@ -13,17 +13,17 @@ using SciMLLogging
 
 # Example VerbositySpecifier from a hypothetical solver package
 struct SolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::LogLevel    # Controls startup messages
-    iterations::LogLevel        # Controls per-iteration output
-    convergence::LogLevel       # Controls convergence messages
-    warnings::LogLevel          # Controls warning messages
+    initialization::MessageLevel    # Controls startup messages
+    iterations::MessageLevel        # Controls per-iteration output
+    convergence::MessageLevel       # Controls convergence messages
+    warnings::MessageLevel          # Controls warning messages
 end
 ```
 
 **What this means:**
 - **`T` parameter**: Controls whether logging is enabled (`T=true`) or disabled (`T=false`)
 - **Each field**: Represents a category of messages the package can emit
-- **LogLevel values**: Can be `Silent()`, `Info()`, `Warn()`, `Error()`, or `Level(n)` for custom levels
+- **MessageLevel values**: Can be `Silent()`, `InfoLevel()`, `WarnLevel()`, `ErrorLevel()`, or `CustomLevel(n)` for custom levels
 
 When `T=false`, all logging is disabled with zero runtime overhead. When `T=true`, each category can be individually controlled.
 
@@ -38,10 +38,10 @@ using SomePackage  # A package that uses SciMLLogging
 result = solve_problem(problem)
 
 # Silent mode (no output)
-result = solve_problem(problem, verbose = SciMLLogging.None())
+result = solve_problem(problem, verbose = None())
 
 # Verbose mode (show more details)
-result = solve_problem(problem, verbose = SciMLLogging.Detailed())
+result = solve_problem(problem, verbose = Detailed())
 ```
 
 ## Understanding Verbosity Levels
@@ -80,10 +80,10 @@ Here's an example of how one might use a packages `AbstractVerbositySpecifier` i
 ```julia
 # Example: Customizing a solver's verbosity
 verbose_settings = SolverVerbosity{true}(
-    initialization = Info(),      # Show startup messages
+    initialization = InfoLevel(),      # Show startup messages
     iterations = Silent(),        # Don't show each iteration
-    convergence = Info(),         # Show when it converges
-    warnings = Warn()            # Show warnings
+    convergence = InfoLevel(),         # Show when it converges
+    warnings = WarnLevel()            # Show warnings
 )
 
 result = solve(problem, verbose = verbose_settings)
@@ -91,10 +91,10 @@ result = solve(problem, verbose = verbose_settings)
 
 **Explanation of the example above:**
 - `SolverVerbosity{true}()` creates an enabled verbosity specifier
-- `initialization = Info()` means startup messages will be shown as informational logs
+- `initialization = InfoLevel()` means startup messages will be shown as informational logs
 - `iterations = Silent()` means iteration progress won't be shown at all
-- `convergence = Info()` means convergence messages will be shown as informational logs
-- `warnings = Warn()` means warnings will be shown as warning-level logs
+- `convergence = InfoLevel()` means convergence messages will be shown as informational logs
+- `warnings = WarnLevel()` means warnings will be shown as warning-level logs
 
 ## Working with Different Output Backends
 
@@ -188,10 +188,10 @@ result = solve_problem(problematic_case, verbose = All())
 
 # Or create custom settings to focus on specific aspects
 debug_verbose = SolverVerbosity{true}(
-    initialization = Info(),
-    iterations = Info(),        # Now show iterations for debugging
-    convergence = Info(),
-    warnings = Warn()
+    initialization = InfoLevel(),
+    iterations = InfoLevel(),        # Now show iterations for debugging
+    convergence = InfoLevel(),
+    warnings = WarnLevel()
 )
 
 result = solve_problem(problematic_case, verbose = debug_verbose)
@@ -207,7 +207,7 @@ production_verbose = SolverVerbosity{true}(
     initialization = Silent(),   # Don't show routine startup
     iterations = Silent(),       # Don't show progress
     convergence = Silent(),      # Don't show normal completion
-    warnings = Warn()           # But do show problems
+    warnings = WarnLevel()           # But do show problems
 )
 
 result = solve_problem(problem, verbose = production_verbose)
@@ -222,10 +222,10 @@ Typical solver verbosity options:
 ```julia
 # Show convergence info but not each iteration
 solver_verbose = SolverVerbosity{true}(
-    initialization = Info(),
+    initialization = InfoLevel(),
     iterations = Silent(),
-    convergence = Info(),
-    warnings = Warn()
+    convergence = InfoLevel(),
+    warnings = WarnLevel()
 )
 
 solution = solve(problem, solver_verbose)
@@ -239,9 +239,9 @@ Optimization packages might have different categories:
 # Focus on optimization progress
 opt_verbose = OptimizerVerbosity{true}(
     initialization = Silent(),
-    objective = Info(),      # Show objective function values
-    constraints = Warn(),    # Show constraint violations
-    convergence = Info()
+    objective = InfoLevel(),      # Show objective function values
+    constraints = WarnLevel(),    # Show constraint violations
+    convergence = InfoLevel()
 )
 
 result = optimize(objective, constraints, opt_verbose)

@@ -26,12 +26,12 @@ using Logging
 
 # Create a simple verbosity structure
 struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    algorithm_choice::SciMLLogging.LogLevel
-    iteration_progress::SciMLLogging.LogLevel
+    algorithm_choice::MessageLevel
+    iteration_progress::MessageLevel
 
     function MyVerbosity{T}(;
-            algorithm_choice = SciMLLogging.Warn(),
-            iteration_progress = SciMLLogging.Info()
+            algorithm_choice = WarnLevel(),
+            iteration_progress = InfoLevel()
     ) where {T}
         new{T}(algorithm_choice, iteration_progress)
     end
@@ -58,10 +58,10 @@ end
 SciMLLogging supports several verbosity levels:
 
   - `Silent()`: No output
-  - `Info()`: Informational messages
-  - `Warn()`: Warning messages
-  - `Error()`: Error messages
-  - `Level(n)`: Custom logging level (using Julia's LogLevel(n))
+  - `InfoLevel()`: Informational messages
+  - `WarnLevel()`: Warning messages
+  - `ErrorLevel()`: Error messages
+  - `CustomLevel(n)`: Custom logging level (using Julia's LogLevel(n))
 
 # Creating Custom Verbosity Types
 
@@ -73,16 +73,16 @@ SciMLLogging supports several verbosity levels:
 ```julia
 # Main verbosity struct with direct LogLevel fields
 struct MyAppVerbosity{T} <: AbstractVerbositySpecifier{T}
-    solver_iterations::SciMLLogging.LogLevel
-    solver_convergence::SciMLLogging.LogLevel
-    performance_timing::SciMLLogging.LogLevel
-    performance_memory::SciMLLogging.LogLevel
+    solver_iterations::MessageLevel
+    solver_convergence::MessageLevel
+    performance_timing::MessageLevel
+    performance_memory::MessageLevel
 
     function MyAppVerbosity{T}(;
-            solver_iterations = SciMLLogging.Info(),
-            solver_convergence = SciMLLogging.Warn(),
-            performance_timing = SciMLLogging.Silent(),
-            performance_memory = SciMLLogging.Silent()
+            solver_iterations = InfoLevel(),
+            solver_convergence = WarnLevel(),
+            performance_timing = Silent(),
+            performance_memory = Silent()
     ) where {T}
         new{T}(solver_iterations, solver_convergence, performance_timing, performance_memory)
     end

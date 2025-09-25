@@ -5,16 +5,16 @@ using Test
 
 # Structs for testing package - simplified structure
 struct TestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    test1::SciMLLogging.LogLevel
-    test2::SciMLLogging.LogLevel
-    test3::SciMLLogging.LogLevel
-    test4::SciMLLogging.LogLevel
+    test1::MessageLevel
+    test2::MessageLevel
+    test3::MessageLevel
+    test4::MessageLevel
 
     function TestVerbosity{T}(;
-            test1 = SciMLLogging.Warn(),
-            test2 = SciMLLogging.Info(),
-            test3 = SciMLLogging.Error(),
-            test4 = SciMLLogging.Silent()) where {T}
+            test1 = WarnLevel(),
+            test2 = InfoLevel(),
+            test3 = ErrorLevel(),
+            test4 = Silent()) where {T}
         new{T}(test1, test2, test3, test4)
     end
 end
@@ -27,17 +27,17 @@ function TestVerbosity(preset::VerbosityPreset)
         TestVerbosity{false}()
     elseif preset isa SciMLLogging.All
         TestVerbosity{true}(
-            test1 = SciMLLogging.Info(),
-            test2 = SciMLLogging.Info(),
-            test3 = SciMLLogging.Info(),
-            test4 = SciMLLogging.Info()
+            test1 = InfoLevel(),
+            test2 = InfoLevel(),
+            test3 = InfoLevel(),
+            test4 = InfoLevel()
         )
-    elseif preset isa SciMLLogging.Minimal
+    elseif preset isa Minimal
         TestVerbosity{true}(
-            test1 = SciMLLogging.Error(),
-            test2 = SciMLLogging.Silent(),
-            test3 = SciMLLogging.Error(),
-            test4 = SciMLLogging.Silent()
+            test1 = ErrorLevel(),
+            test2 = Silent(),
+            test3 = ErrorLevel(),
+            test4 = Silent()
         )
     else
         TestVerbosity{true}()
@@ -65,9 +65,9 @@ end
 
 @testset "Verbosity presets" begin
     # Test with different presets
-    verbose_all = TestVerbosity(SciMLLogging.All())
-    verbose_minimal = TestVerbosity(SciMLLogging.Minimal())
-    verbose_none = TestVerbosity(SciMLLogging.None())
+    verbose_all = TestVerbosity(All())
+    verbose_minimal = TestVerbosity(Minimal())
+    verbose_none = TestVerbosity(None())
 
     # All preset should log info level messages
     @test_logs (:info, "All preset test") @SciMLMessage("All preset test", verbose_all, :test1)
