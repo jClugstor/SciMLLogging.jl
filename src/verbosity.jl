@@ -1,51 +1,51 @@
 """
-    LogLevel
+    MessageLevel
 
 Abstract base type for all verbosity log levels in SciMLLogging.
 
 Log levels determine the severity/importance of messages. Concrete subtypes include:
 - `Silent`: No output
-- `Info`: Informational messages
-- `Warn`: Warning messages
-- `Error`: Error messages
-- `Level(n)`: Custom log level with integer value `n`
+- `InfoLevel`: Informational messages
+- `WarnLevel`: Warning messages
+- `ErrorLevel`: Error messages
+- `CustomLevel(n)`: Custom log level with integer value `n`
 """
-abstract type LogLevel end
+abstract type MessageLevel end
 
 """
-    Silent <: LogLevel
+    Silent <: MessageLevel
 
 Log level that produces no output. When a message category is set to `Silent()`,
 no messages will be emitted for that category.
 """
-struct Silent <: LogLevel end
+struct Silent <: MessageLevel end
 
 """
-    Info <: LogLevel
+    InfoLevel <: MessageLevel
 
 Informational log level. Messages at this level provide general information
 about the progress or state of the computation.
 """
-struct Info <: LogLevel end
+struct InfoLevel <: MessageLevel end
 
 """
-    Warn <: LogLevel
+    WarnLevel <: MessageLevel
 
 Warning log level. Messages at this level indicate potential issues or
 situations that may require attention but don't prevent execution.
 """
-struct Warn <: LogLevel end
+struct WarnLevel <: MessageLevel end
 
 """
-    Error <: LogLevel
+    ErrorLevel <: MessageLevel
 
 Error log level. Messages at this level indicate serious problems or
 failures in the computation.
 """
-struct Error <: LogLevel end
+struct ErrorLevel <: MessageLevel end
 
 """
-    Level(n::Int) <: LogLevel
+    CustomLevel(n::Int) <: MessageLevel
 
 Custom log level with integer value `n`. This allows creating custom
 severity levels beyond the standard Info/Warn/Error hierarchy.
@@ -54,11 +54,11 @@ Higher integer values typically indicate higher priority/severity.
 
 # Example
 ```julia
-debug_level = Level(-1000)  # Very low priority debug messages
-critical_level = Level(1000)  # Very high priority critical messages
+debug_level = CustomLevel(-1000)  # Very low priority debug messages
+critical_level = CustomLevel(1000)  # Very high priority critical messages
 ```
 """
-struct Level <: LogLevel
+struct CustomLevel <: MessageLevel
     level::Int
 end
 
@@ -86,14 +86,6 @@ a verbosity specifier with `T=false`, providing zero runtime overhead.
 struct None <: VerbosityPreset end
 
 """
-    All <: VerbosityPreset
-
-Preset that enables maximum verbosity. All message categories are typically
-set to show informational messages or their appropriate levels.
-"""
-struct All <: VerbosityPreset end
-
-"""
     Minimal <: VerbosityPreset
 
 Preset that shows only essential messages. Typically includes only warnings,
@@ -119,3 +111,11 @@ analysis. Shows most or all available message categories to help with
 troubleshooting and understanding program behavior.
 """
 struct Detailed <: VerbosityPreset end
+
+"""
+    All <: VerbosityPreset
+
+Preset that enables maximum verbosity. All message categories are typically
+set to show informational messages or their appropriate levels.
+"""
+struct All <: VerbosityPreset end

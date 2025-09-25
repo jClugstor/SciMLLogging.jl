@@ -8,7 +8,7 @@ SciMLLogging.jl provides three main components for package developers:
 
 1. `AbstractVerbositySpecifier{T}` - Base type for creating custom verbosity types
 2. `@SciMLMessage` - Macro for emitting conditional log messages
-3. Verbosity levels - Predefined log levels (`Silent`, `Info`, `Warn`, `Error`, `Level(n)`)
+3. Verbosity levels - Predefined log levels (`Silent`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, `CustomLevel(n)`)
 
 ## Step 1: Design Your Verbosity Interface
 
@@ -26,16 +26,16 @@ Define a struct that inherits from `AbstractVerbositySpecifier{T}`:
 using SciMLLogging
 
 struct MySolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::LogLevel
-    iterations::LogLevel
-    convergence::LogLevel
-    warnings::LogLevel
+    initialization::MessageLevel
+    iterations::MessageLevel
+    convergence::MessageLevel
+    warnings::MessageLevel
 
     function MySolverVerbosity{T}(;
-        initialization = Info(),
+        initialization = InfoLevel(),
         iterations = Silent(),
-        convergence = Info(),
-        warnings = Warn()
+        convergence = InfoLevel(),
+        warnings = WarnLevel()
     ) where T
         new{T}(initialization, iterations, convergence, warnings)
     end
@@ -65,17 +65,17 @@ function MySolverVerbosity(preset::VerbosityPreset)
         MySolverVerbosity{false}()
     elseif preset isa All
         MySolverVerbosity{true}(
-            initialization = Info(),
-            iterations = Info(),
-            convergence = Info(),
-            warnings = Warn()
+            initialization = InfoLevel(),
+            iterations = InfoLevel(),
+            convergence = InfoLevel(),
+            warnings = WarnLevel()
         )
     elseif preset isa Minimal
         MySolverVerbosity{true}(
             initialization = Silent(),
             iterations = Silent(),
-            convergence = Error(),
-            warnings = Error()
+            convergence = ErrorLevel(),
+            warnings = ErrorLevel()
         )
     else
         MySolverVerbosity{true}()  # Default
@@ -157,10 +157,10 @@ Provide clear documentation for your users:
 Controls verbosity output from MySolver functions.
 
 # Keyword Arguments
-- `initialization = Info()`: Messages about solver setup
+- `initialization = InfoLevel()`: Messages about solver setup
 - `iterations = Silent()`: Per-iteration progress messages
-- `convergence = Info()`: Convergence/failure notifications
-- `warnings = Warn()`: Warning messages during solving
+- `convergence = InfoLevel()`: Convergence/failure notifications
+- `warnings = WarnLevel()`: Warning messages during solving
 
 # Constructors
 - `MySolverVerbosity()`: Default enabled verbosity
@@ -237,11 +237,11 @@ For specialized needs, you can create custom log levels:
 
 ```julia
 struct MySolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    debug::LogLevel
+    debug::MessageLevel
     # ... other fields
 
     function MySolverVerbosity{T}(;
-        debug = Level(-1000),  # Custom level below Info
+        debug = CustomLevel(-1000),  # Custom level below Info
         # ... other defaults
     ) where T
         new{T}(debug, ...)
@@ -260,9 +260,9 @@ using SciMLLogging
 import SciMLLogging: AbstractVerbositySpecifier
 
 struct ExampleVerbosity{T} <: AbstractVerbositySpecifier{T}
-    progress::LogLevel
+    progress::MessageLevel
 
-    ExampleVerbosity{T}(progress = Info()) where T = new{T}(progress)
+    ExampleVerbosity{T}(progress = InfoLevel()) where T = new{T}(progress)
 end
 
 ExampleVerbosity() = ExampleVerbosity{true}()
