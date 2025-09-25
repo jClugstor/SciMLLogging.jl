@@ -86,14 +86,6 @@ a verbosity specifier with `T=false`, providing zero runtime overhead.
 struct None <: VerbosityPreset end
 
 """
-    All <: VerbosityPreset
-
-Preset that enables maximum verbosity. All message categories are typically
-set to show informational messages or their appropriate levels.
-"""
-struct All <: VerbosityPreset end
-
-"""
     Minimal <: VerbosityPreset
 
 Preset that shows only essential messages. Typically includes only warnings,
@@ -119,3 +111,11 @@ analysis. Shows most or all available message categories to help with
 troubleshooting and understanding program behavior.
 """
 struct Detailed <: VerbosityPreset end
+
+"""
+    All <: VerbosityPreset
+
+Preset that enables maximum verbosity. All message categories are typically
+set to show informational messages or their appropriate levels.
+"""
+struct All <: VerbosityPreset end
