@@ -21,7 +21,7 @@ Consistent logging patterns across the SciML ecosystem
 # Basic Usage
 
 ```julia
-using SciMLLogging
+using SciMLLogging: AbstractVerbositySpecifier, MessageLevel, WarnLevel, InfoLevel, Silent, ErrorLevel
 using Logging
 
 # Create a simple verbosity structure
