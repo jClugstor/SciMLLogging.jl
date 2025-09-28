@@ -14,8 +14,7 @@ SciMLLogging.jl provides four main components for package developers:
 ### AbstractVerbositySpecifier
     `AbstractVerbositySpecifier{T}` is the base type that package developers implement a subtype of to create custom verbosity type for their packages.
       
-- Type parameter T: Controls whether logging is enabled
-        (T=true) or disabled (T=false). When `T = false`, any use of the `SciMLLogging.emit_message` function points to any empty function. When the the type parameter is known at compile time, this allows for the compiler to make certain optimizations that can lead to this system having zero runtime overhead when not in use. 
+- Type parameter T: Controls whether logging is enabled (T=true) or disabled (T=false). When `T = false`, any use of the `SciMLLogging.emit_message` function points to any empty function. When the the type parameter is known at compile time, this allows for the compiler to make certain optimizations that can lead to this system having zero runtime overhead when not in use. 
 - Message levels: Fields of the `AbstractVerbositySpecifier` represent messages or groups of messages. These fields should be of the type `SciMLLogging.MessageLevel`. Each message level subtype represents a different level at which the message will be logged at. 
 ### @SciMLMessage 
 ```@docs
