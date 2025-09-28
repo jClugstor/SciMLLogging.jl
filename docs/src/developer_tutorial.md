@@ -4,11 +4,41 @@ This tutorial is for Julia package developers who want to integrate SciMLLogging
 
 ## Overview
 
-SciMLLogging.jl provides three main components for package developers:
+SciMLLogging.jl provides four main components for package developers:
 
 1. `AbstractVerbositySpecifier{T}` - Base type for creating custom verbosity types
 2. `@SciMLMessage` - Macro for emitting conditional log messages
-3. Verbosity levels - Predefined log levels (`Silent`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, `CustomLevel(n)`)
+3.  Log levels - Predefined log levels (`Silent`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, `CustomLevel(n)`)
+4.  Verbosity preset levels - `None`, `Minimal`, `Standard`, `Detailed`, `All`
+
+### AbstractVerbositySpecifier
+    `AbstractVerbositySpecifier{T}` is the base type that package developers implement a subtype of to create custom verbosity type for their packages.
+      
+- Type parameter T: Controls whether logging is enabled
+        (T=true) or disabled (T=false). When `T = false`, any use of the `SciMLLogging.emit_message` function points to any empty function. When the the type parameter is known at compile time, this allows for the compiler to make certain optimizations that can lead to this system having zero runtime overhead when not in use. 
+- Message levels: Fields of the `AbstractVerbositySpecifier` represent messages or groups of messages. These fields should be of the type `SciMLLogging.MessageLevel`. Each message level subtype represents a different level at which the message will be logged at. 
+### @SciMLMessage 
+```@docs
+@SciMLMessage
+```    
+In order to use the the `@SciMLMessage` macro, simply choose which of the fields of your `AbstractVerbositySpecifier` should control that particular message. Then when the macro is called, the field of the verbosity object corresponding with the `option` argument to the macro is used to control the logging of the message. 
+
+### Log Levels
+Possible types for these are:
+- `Silent()` : no message is emitted
+- `InfoLevel()` : message is emitted as an `Info` log
+- `WarnLevel()` : message is emitted as a `Warn` log
+- `ErrorLevel()` : message is emitted as an `Error` log
+- `CustomLevel(n)` : message is emitted at `LogLevel(n)`
+
+### Verbosity Presets
+SciMLLogging also provides an abstract `VerbosityPreset` type. The ones provided by `SciMLLogging` are:
+- `None()`: Log nothing at all 
+- `Minimal()`: Preset that shows only essential messages
+- `Standard()`: Preset that provides balanced verbosity suitable for typical usage
+- `Detailed()`: Preset that provides comprehensive verbosity for debugging and detailed
+analysis
+- `All()`: Preset that enables maximum verbosity
 
 ## Step 1: Design Your Verbosity Interface
 
@@ -16,11 +46,11 @@ First, decide what aspects of your package should be controllable by users. For 
 - Initialization messages
 - Iteration progress
 - Convergence information
-- Warning messages
+- Error control information
 
 ## Step 2: Create Your Verbosity Type
 
-Define a struct that inherits from `AbstractVerbositySpecifier{T}`:
+Define a struct that subtypes `AbstractVerbositySpecifier{T}`:
 
 ```julia
 using SciMLLogging
@@ -41,16 +71,9 @@ struct MySolverVerbosity{T} <: AbstractVerbositySpecifier{T}
     end
 end
 ```
-
-**Key Design Principles:**
-- The type parameter `T` controls whether any logging is enabled or not: `T=true` enables messages, `T=false` disables them
-- Each field represents a category of messages your package can emit
-- Provide sensible defaults that work for most users
-- Use keyword arguments for flexibility
-
 ## Step 3: Add Convenience Constructors
 
-Make it easy for users to create verbosity instances:
+Make it easy for users to create verbosity instances. Perhaps include a constructor that can take a VerbosityPreset, and use it to set the rest of the fields, and a constructor that takes all keyword arguments:
 
 ```julia
 # Default enabled verbosity
@@ -59,6 +82,15 @@ MySolverVerbosity() = MySolverVerbosity{true}()
 # Boolean constructor
 MySolverVerbosity(enabled::Bool) = enabled ? MySolverVerbosity{true}() : MySolverVerbosity{false}()
 
+function MySolverVerbosity{T}(;
+        initialization = InfoLevel(),
+        iterations = Silent(),
+        convergence = InfoLevel(),
+        error_control = WarnLevel()
+    ) where T
+        MySolverVerbosity{T}(initialization, iterations, convergence, error_control)
+    end
+end 
 # Preset-based constructor (optional)
 function MySolverVerbosity(preset::AbstractVerbosityPreset)
     if preset isa None
@@ -68,14 +100,14 @@ function MySolverVerbosity(preset::AbstractVerbosityPreset)
             initialization = InfoLevel(),
             iterations = InfoLevel(),
             convergence = InfoLevel(),
-            warnings = WarnLevel()
+            error_control = WarnLevel()
         )
     elseif preset isa Minimal
         MySolverVerbosity{true}(
             initialization = Silent(),
             iterations = Silent(),
             convergence = ErrorLevel(),
-            warnings = ErrorLevel()
+            error_control = ErrorLevel()
         )
     else
         MySolverVerbosity{true}()  # Default
@@ -106,7 +138,7 @@ function my_solve(problem, verbose::MySolverVerbosity)
         end
 
         if should_warn_about_something()
-            @SciMLMessage("Convergence is slow, consider adjusting parameters", verbose, :warnings)
+            @SciMLMessage("Convergence is slow, consider adjusting parameters", verbose, :error_control)
         end
     end
 
@@ -114,39 +146,7 @@ function my_solve(problem, verbose::MySolverVerbosity)
     return nothing
 end
 ```
-
-**Message Types:**
-- **String messages**: `@SciMLMessage("Fixed message", verbose, :category)`
-- **Function messages**: `@SciMLMessage(verbose, :category) do; "Dynamic message"; end`
-
-Use function messages when:
-- Message generation is expensive
-- Message includes computed values
-- You want lazy evaluation
-
-## Step 5: Export Your Verbosity Type
-
-In your main module file:
-
-```julia
-module MySolver
-
-using SciMLLogging
-import SciMLLogging: AbstractVerbositySpecifier
-
-# Your verbosity type definition...
-include("verbosity.jl")
-
-# Your solver code...
-include("solver.jl")
-
-# Export the verbosity type
-export MySolverVerbosity
-
-end
-```
-
-## Step 6: Document for Users
+## Step 5: Document for Users
 
 Provide clear documentation for your users:
 
@@ -160,29 +160,17 @@ Controls verbosity output from MySolver functions.
 - `initialization = InfoLevel()`: Messages about solver setup
 - `iterations = Silent()`: Per-iteration progress messages
 - `convergence = InfoLevel()`: Convergence/failure notifications
-- `warnings = WarnLevel()`: Warning messages during solving
+- `error_control = WarnLevel()`: Messages about solver error control
 
 # Constructors
 - `MySolverVerbosity()`: Default enabled verbosity
 - `MySolverVerbosity(false)`: Disabled (zero overhead)
 - `MySolverVerbosity(All())`: Enable all message categories
 - `MySolverVerbosity(Minimal())`: Only errors and convergence
-
-# Example
-```julia
-# Default verbosity
-verbose = MySolverVerbosity()
-
-# Custom verbosity - show everything except iterations
-verbose = MySolverVerbosity(iterations = Silent())
-
-# Silent mode (no runtime overhead)
-verbose = MySolverVerbosity(false)
-```
 """
 ```
 
-## Step 7: Add Tests
+## Step 6: Add Tests
 
 Test your verbosity implementation:
 
@@ -195,7 +183,7 @@ using Logging
     # Test message emission
     verbose = MySolverVerbosity()
 
-    @test_logs (:info, r"Initializing solver") begin
+    @test_logs (:info, r"Initializing solver") match_mode=:any begin
         my_solve(test_problem, verbose)
     end
 
@@ -209,22 +197,11 @@ end
 
 ## Best Practices
 
-### Performance
-- Always use the type parameter `T` to control whether logging is enabled or not
-- Use function-based messages for expensive computations
-- Consider message frequency - don't spam users with too many messages
-
 ### User Experience
 - Provide sensible defaults that work for most users
 - Use descriptive category names (`:initialization` not `:init`)
 - Group related messages into logical categories
 - Document what each category controls
-
-### Message Content
-- Include relevant context (iteration numbers, values, etc.)
-- Use consistent formatting across your package
-- Make messages actionable when possible
-- Avoid overly technical jargon in user-facing messages
 
 ### Integration
 - Accept verbosity parameters in your main API functions
@@ -283,3 +260,46 @@ end
 ```
 
 This example shows the minimal structure needed to integrate SciMLLogging into a package.
+
+## Utility Functions for Integration
+
+SciMLLogging provides utility functions to help integrate with packages that use different verbosity systems. For example, perhaps the package you're developing depends on a package that has verbosity settings that are set using a Bool or an integer, but you still want to be able to control all of the verbosity through the SciMLLogging interface. 
+
+### `verbosity_to_int()`
+
+Converts a `MessageLevel` to an integer value. This is useful when interfacing with packages that use integer-based verbosity levels:
+
+```julia
+using SciMLLogging
+
+# Convert message levels to integers
+verbosity_to_int(Silent())      # Returns 0
+verbosity_to_int(InfoLevel())   # Returns 1
+verbosity_to_int(WarnLevel())   # Returns 2
+verbosity_to_int(ErrorLevel())  # Returns 3
+verbosity_to_int(CustomLevel(5)) # Returns 5
+
+# Example usage with a package that expects integer verbosity
+solver_verbosity = SolverVerbosity(Standard())
+int_level = verbosity_to_int(solver_verbosity.convergence)
+external_solve(problem, verbosity = int_level)
+```
+
+### `verbosity_to_bool()`
+
+Converts a `MessageLevel` to a boolean value. This is useful for packages that use simple on/off verbosity:
+
+```julia
+# Convert message levels to booleans
+verbosity_to_bool(Silent())     # Returns false
+verbosity_to_bool(InfoLevel())  # Returns true
+verbosity_to_bool(WarnLevel())  # Returns true
+verbosity_to_bool(ErrorLevel()) # Returns true
+
+# Example usage with a package that expects boolean verbosity
+solver_verbosity = SolverVerbosity(Minimal())
+should_log = verbosity_to_bool(solver_verbosity.iterations)
+external_solve(problem, verbose = should_log)
+```
+
+These functions make it easier to integrate SciMLLogging with existing packages that have their own verbosity conventions.
