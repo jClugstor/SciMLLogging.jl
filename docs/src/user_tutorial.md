@@ -1,7 +1,6 @@
 # User Tutorial: Configuring Package Verbosity
 
-This tutorial is for end users who want to control the verbosity of packages that use SciMLLogging.jl. If you're using packages from the SciML ecosystem or other packages that support SciMLLogging. 
-
+This tutorial is for end users who want to control the verbosity of packages that use SciMLLogging.jl.
 Each package will have it's own implementation of the `AbstractVerbositySpecifier` type, which defines the available verbosity options. This guide is meant to be a general guide to the specifics of SciMLLogging.jl, as well as give some examples of how the system is typically implemented. For details on the specific verbosity settings of a package, refer to the package's documentation.
 
 ## Understanding Verbosity Specifiers
@@ -29,53 +28,11 @@ When `T=false`, all logging is disabled with zero runtime overhead. When `T=true
 
 ## Quick Start
 
-Most packages that use SciMLLogging provide simple ways to control their verbosity:
-
-```julia
-using SomePackage  # A package that uses SciMLLogging
-
-# Default verbosity (usually shows important messages)
-result = solve_problem(problem)
-
-# Silent mode (no output)
-result = solve_problem(problem, verbose = None())
-
-# Verbose mode (show more details)
-result = solve_problem(problem, verbose = Detailed())
-```
-
-## Understanding Verbosity Levels
-
-SciMLLogging packages typically categorize their messages into different types:
-
-- **Silent**: No output at all
-- **InfoLevel**: General informational messages
-- **WarnLevel**: Warning messages about potential issues
-- **ErrorLevel**: Error messages (usually still shown even in quiet modes)
-
-## Common Usage Patterns
-
-### Using Verbosity Presets
-
-Many packages provide preset verbosity levels:
-
-```julia
-using SciMLLogging  # To access preset types
-
-# Minimal output - only critical messages
-result = solve(problem, verbose = Minimal())
-
-# Maximum output - show everything
-result = solve(problem, verbose = All())
-
-# No output at all
-result = solve(problem, verbose = None())
-```
+Typically, packages that use SciMLLogging will provide a keyword argument such as `verbose` or `verbosity` to some top-level function. This keyword argument will take an `AbstractVerbositySpecifier` implementation, defined in that package, that will control which messages get passed to the logging system, and at what level these messages will be emitted at. 
 
 ### Example of a typical AbstractVerbositySpecifier
 
-Here's an example of how one might use a packages `AbstractVerbositySpecifier` implementation to control the output.
-
+Here's an example of how one might use a packages `AbstractVerbositySpecifier` implementation to control the output, using the same `SolverVerbosity` type as above. 
 
 ```julia
 # Example: Customizing a solver's verbosity
@@ -83,7 +40,7 @@ verbose_settings = SolverVerbosity{true}(
     initialization = InfoLevel(),      # Show startup messages
     iterations = Silent(),        # Don't show each iteration
     convergence = InfoLevel(),         # Show when it converges
-    warnings = WarnLevel()            # Show warnings
+    error_control = WarnLevel()            # Show warnings
 )
 
 result = solve(problem, verbose = verbose_settings)
@@ -93,48 +50,62 @@ result = solve(problem, verbose = verbose_settings)
 - `SolverVerbosity{true}()` creates an enabled verbosity specifier
 - `initialization = InfoLevel()` means startup messages will be shown as informational logs
 - `iterations = Silent()` means iteration progress won't be shown at all
-- `convergence = InfoLevel()` means convergence messages will be shown as informational logs
-- `warnings = WarnLevel()` means warnings will be shown as warning-level logs
+- `convergence = InfoLevel()` means messages related to convergence will be shown as informational logs
+- `error_control = WarnLevel()` means message about controlling solver error will be shown as warning-level logs
 
+### Using Verbosity Presets
+
+SciMLLogging also provides an abstract `VerbosityPreset` type. The ones provided by `SciMLLogging` are:
+- `None()`: Log nothing at all 
+- `Minimal()`: Preset that shows only essential messages
+- `Standard()`: Preset that provides balanced verbosity suitable for typical usage
+- `Detailed()`: Preset that provides comprehensive verbosity for debugging and detailed
+analysis
+- `All()`: Preset that enables maximum verbosity
+
+
+These types are meant to set each field of an `AbstractVerbositySpecifier` to a predefined `MessageLevel`. 
+For example:
+```julia
+none_verbose = SolverVerbosity(None())
+# Would be equivalent to 
+SolverVerbosity{false}(
+    initialization = Silent(),   
+    iterations = Silent(),        
+    convergence = Silent(),       
+    error_control = Silent())
+
+
+standard_verbose = SolverVerbosity(Standard())
+# Would be equivalent to 
+SolverVerbosity{true}(
+    initialization = Info(),   
+    iterations = Silent(),        
+    convergence = Warn(),       
+    error_control = Info())
+```
+
+```julia
+using SciMLLogging  # To access preset types
+
+# Minimal output - only critical messages
+result = solve(problem, verbose = SolverVerbosity(Minimal()))
+
+# Maximum output - show everything
+result = solve(problem, verbose = SolverVerbosity(All()))
+
+# No output at all
+result = solve(problem, verbose = SolverVerbosity(None()))
+```
 ## Working with Different Output Backends
 
 ### Standard Julia Logging
 
-By default, messages go through Julia's standard logging system. You can control this with the logging level:
+By default, messages go through Julia's standard logging system. That means that onces a log message is emitted, it can be filtered, sent to other files, and generally processed using the standard Julia logging system. For more details see the [Logging documentation](https://docs.julialang.org/en/v1/stdlib/Logging/). 
 
-```julia
-using Logging
+#### Redirecting Output to Files
 
-# Only show warnings and errors
-with_logger(ConsoleLogger(stderr, Logging.Warn)) do
-    result = solve_problem(problem, verbose = true)
-end
-
-# Show everything including debug messages
-with_logger(ConsoleLogger(stderr, Logging.Debug)) do
-    result = solve_problem(problem, verbose = true)
-end
-```
-
-### Simple Console Output
-
-Some packages may be configured to use simple console output instead of the logging system:
-
-```julia
-using SciMLLogging
-
-# Switch to simple Core.println output (if supported by the package)
-SciMLLogging.set_logging_backend("core")
-
-# Switch back to standard logging
-SciMLLogging.set_logging_backend("logging")
-```
-
-Note: You need to restart Julia after changing the backend preference.
-
-## Redirecting Output to Files
-
-You can redirect verbose output to files using Julia's logging system:
+If using the Logging.jl backend, you can redirect messages to files using Julia's logging system:
 
 ```julia
 using Logging
@@ -159,13 +130,30 @@ logger = SciMLLogger(
 )
 
 with_logger(logger) do
-    result = solve_problem(problem, verbose = true)
+    result = solve(problem, verbose = SolverVerbosity(Standard()))
 end
 ```
 
+### Simple Console Output
+
+SciMLLogging can also be configured to use `Core.println` to display messages instead of the full logging system. This is done through a [Preferences.jl](https://github.com/JuliaPackaging/Preferences.jl) setting. 
+
+```julia
+using SciMLLogging
+
+# Switch to simple Core.println output (if supported by the package)
+SciMLLogging.set_logging_backend("core")
+
+# Switch back to standard logging
+SciMLLogging.set_logging_backend("logging")
+```
+
+Note: You need to restart Julia after changing the backend preference in order to use the chosen backend.
+
+
 ## Common Scenarios
 
-### Running Experiments Quietly
+### Running Experiments with Minimal Output
 
 When running many experiments, you might want minimal output:
 
@@ -173,7 +161,7 @@ When running many experiments, you might want minimal output:
 results = []
 for param in parameter_sweep
     # Only show errors and critical information
-    result = solve_problem(param, verbose = Minimal())
+    result = solve(param, verbose = SolverVerbosity(Minimal()))
     push!(results, result)
 end
 ```
@@ -184,7 +172,7 @@ When troubleshooting problems, enable maximum verbosity:
 
 ```julia
 # Show everything to understand what's happening
-result = solve_problem(problematic_case, verbose = All())
+result = solve(problematic_case, verbose = SolverVerbosity(All()))
 
 # Or create custom settings to focus on specific aspects
 debug_verbose = SolverVerbosity{true}(
@@ -196,102 +184,3 @@ debug_verbose = SolverVerbosity{true}(
 
 result = solve_problem(problematic_case, verbose = debug_verbose)
 ```
-
-### Production Runs
-
-For production environments, you might want only warnings and errors:
-
-```julia
-# Custom settings for production
-production_verbose = SolverVerbosity{true}(
-    initialization = Silent(),   # Don't show routine startup
-    iterations = Silent(),       # Don't show progress
-    convergence = Silent(),      # Don't show normal completion
-    warnings = WarnLevel()           # But do show problems
-)
-
-result = solve_problem(problem, verbose = production_verbose)
-```
-
-## Package-Specific Examples
-
-### Solver Packages
-
-Typical solver verbosity options:
-
-```julia
-# Show convergence info but not each iteration
-solver_verbose = SolverVerbosity{true}(
-    initialization = InfoLevel(),
-    iterations = Silent(),
-    convergence = InfoLevel(),
-    warnings = WarnLevel()
-)
-
-solution = solve(problem, solver_verbose)
-```
-
-### Optimization Packages
-
-Optimization packages might have different categories:
-
-```julia
-# Focus on optimization progress
-opt_verbose = OptimizerVerbosity{true}(
-    initialization = Silent(),
-    objective = InfoLevel(),      # Show objective function values
-    constraints = WarnLevel(),    # Show constraint violations
-    convergence = InfoLevel()
-)
-
-result = optimize(objective, constraints, opt_verbose)
-```
-
-## Tips and Best Practices
-
-### Finding Available Options
-
-To see what verbosity options a package provides:
-
-```julia
-# Check the documentation
-?SolverVerbosity
-
-# Look at the default constructor
-SolverVerbosity()
-
-# Many packages document their verbosity categories
-```
-
-### Testing Your Settings
-
-Before long runs, test your verbosity settings on a small example:
-
-```julia
-# Test with a quick example first
-test_result = solve_problem(small_test_case, verbose_settings)
-
-# Then use the same settings for the full problem
-result = solve_problem(full_problem, verbose_settings)
-```
-
-### Performance Considerations
-
-- Using `verbose = false` or `None()` typically has zero runtime overhead
-- Custom verbosity settings have minimal overhead
-- File logging might slow down execution if there are many messages
-
-### Combining with Julia's Built-in Logging
-
-You can combine package verbosity with Julia's logging filters:
-
-```julia
-using Logging
-
-# Package shows its messages, but Julia filters to only warnings+
-with_logger(ConsoleLogger(stderr, Logging.Warn)) do
-    result = solve_problem(problem, verbose = true)
-end
-```
-
-This gives you both package-level control (what messages to generate) and system-level control (what messages to display).
