@@ -26,10 +26,10 @@ Define a struct that inherits from `AbstractVerbositySpecifier{T}`:
 using SciMLLogging
 
 struct MySolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::MessageLevel
-    iterations::MessageLevel
-    convergence::MessageLevel
-    warnings::MessageLevel
+    initialization::AbstractMessageLevel
+    iterations::AbstractMessageLevel
+    convergence::AbstractMessageLevel
+    warnings::AbstractMessageLevel
 
     function MySolverVerbosity{T}(;
         initialization = InfoLevel(),
@@ -237,7 +237,7 @@ For specialized needs, you can create custom log levels:
 
 ```julia
 struct MySolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    debug::MessageLevel
+    debug::AbstractMessageLevel
     # ... other fields
 
     function MySolverVerbosity{T}(;
@@ -260,7 +260,7 @@ using SciMLLogging
 import SciMLLogging: AbstractVerbositySpecifier
 
 struct ExampleVerbosity{T} <: AbstractVerbositySpecifier{T}
-    progress::MessageLevel
+    progress::AbstractMessageLevel
 
     ExampleVerbosity{T}(progress = InfoLevel()) where T = new{T}(progress)
 end

@@ -1,5 +1,5 @@
 """
-    MessageLevel
+    AbstractMessageLevel
 
 Abstract base type for all verbosity log levels in SciMLLogging.
 
@@ -10,42 +10,42 @@ Log levels determine the severity/importance of messages. Concrete subtypes incl
 - `ErrorLevel`: Error messages
 - `CustomLevel(n)`: Custom log level with integer value `n`
 """
-abstract type MessageLevel end
+abstract type AbstractMessageLevel end
 
 """
-    Silent <: MessageLevel
+    Silent <: AbstractMessageLevel
 
 Log level that produces no output. When a message category is set to `Silent()`,
 no messages will be emitted for that category.
 """
-struct Silent <: MessageLevel end
+struct Silent <: AbstractMessageLevel end
 
 """
-    InfoLevel <: MessageLevel
+    InfoLevel <: AbstractMessageLevel
 
 Informational log level. Messages at this level provide general information
 about the progress or state of the computation.
 """
-struct InfoLevel <: MessageLevel end
+struct InfoLevel <: AbstractMessageLevel end
 
 """
-    WarnLevel <: MessageLevel
+    WarnLevel <: AbstractMessageLevel
 
 Warning log level. Messages at this level indicate potential issues or
 situations that may require attention but don't prevent execution.
 """
-struct WarnLevel <: MessageLevel end
+struct WarnLevel <: AbstractMessageLevel end
 
 """
-    ErrorLevel <: MessageLevel
+    ErrorLevel <: AbstractMessageLevel
 
 Error log level. Messages at this level indicate serious problems or
 failures in the computation.
 """
-struct ErrorLevel <: MessageLevel end
+struct ErrorLevel <: AbstractMessageLevel end
 
 """
-    CustomLevel(n::Int) <: MessageLevel
+    CustomLevel(n::Int) <: AbstractMessageLevel
 
 Custom log level with integer value `n`. This allows creating custom
 severity levels beyond the standard Info/Warn/Error hierarchy.
@@ -58,7 +58,7 @@ debug_level = CustomLevel(-1000)  # Very low priority debug messages
 critical_level = CustomLevel(1000)  # Very high priority critical messages
 ```
 """
-struct CustomLevel <: MessageLevel
+struct CustomLevel <: AbstractMessageLevel
     level::Int
 end
 

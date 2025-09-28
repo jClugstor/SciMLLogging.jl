@@ -21,9 +21,9 @@ using SciMLLogging
 using Logging
 
 struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    startup::MessageLevel
-    progress::MessageLevel
-    warnings::MessageLevel
+    startup::AbstractMessageLevel
+    progress::AbstractMessageLevel
+    warnings::AbstractMessageLevel
 
     function MyVerbosity{T}(;
         startup = InfoLevel(),
@@ -77,7 +77,7 @@ using Logging
 
 # Define the verbosity system (same as before)
 struct MyVerbosity2{T} <: AbstractVerbositySpecifier{T}
-    progress::MessageLevel
+    progress::AbstractMessageLevel
 
     MyVerbosity2{T}(progress = SciMLLogging.InfoLevel()) where T = new{T}(progress)
 end
@@ -106,7 +106,7 @@ using SciMLLogging
 using Logging
 
 struct MyVerbosity3{T} <: AbstractVerbositySpecifier{T}
-    startup::MessageLevel
+    startup::AbstractMessageLevel
 
     MyVerbosity3{T}(startup = InfoLevel()) where T = new{T}(startup)
 end
@@ -164,7 +164,7 @@ logger = SciMLLogger(
 
 # Define a simple verbosity system for testing
 struct LoggerTestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    test::MessageLevel
+    test::AbstractMessageLevel
 
     LoggerTestVerbosity{T}(test = WarnLevel()) where T = new{T}(test)
 end
@@ -194,9 +194,9 @@ Random.seed!(123) # For reproducibility
 
 # Create verbosity type
 struct SolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::MessageLevel
-    iterations::MessageLevel
-    convergence::MessageLevel
+    initialization::AbstractMessageLevel
+    iterations::AbstractMessageLevel
+    convergence::AbstractMessageLevel
 
     function SolverVerbosity{T}(;
         initialization = InfoLevel(),
@@ -251,7 +251,7 @@ using Test
 
 # Define a simple verbosity system for testing
 struct TestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    level::MessageLevel
+    level::AbstractMessageLevel
 
     TestVerbosity{T}(level = InfoLevel()) where T = new{T}(level)
 end

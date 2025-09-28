@@ -1,14 +1,14 @@
 using SciMLLogging
-using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset, MessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
+using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset, AbstractMessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
 using Logging
 using Test
 
 # Structs for testing package - simplified structure
 struct TestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    test1::MessageLevel
-    test2::MessageLevel
-    test3::MessageLevel
-    test4::MessageLevel
+    test1::AbstractMessageLevel
+    test2::AbstractMessageLevel
+    test3::AbstractMessageLevel
+    test4::AbstractMessageLevel
 
     function TestVerbosity{T}(;
             test1 = WarnLevel(),

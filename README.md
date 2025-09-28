@@ -21,13 +21,13 @@ Consistent logging patterns across the SciML ecosystem
 # Basic Usage
 
 ```julia
-using SciMLLogging: AbstractVerbositySpecifier, MessageLevel, WarnLevel, InfoLevel, Silent, ErrorLevel
+using SciMLLogging: AbstractVerbositySpecifier, AbstractMessageLevel, WarnLevel, InfoLevel, Silent, ErrorLevel
 using Logging
 
 # Create a simple verbosity structure
 struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    algorithm_choice::MessageLevel
-    iteration_progress::MessageLevel
+    algorithm_choice::AbstractMessageLevel
+    iteration_progress::AbstractMessageLevel
 
     function MyVerbosity{T}(;
             algorithm_choice = WarnLevel(),
@@ -73,10 +73,10 @@ SciMLLogging supports several verbosity levels:
 ```julia
 # Main verbosity struct with direct LogLevel fields
 struct MyAppVerbosity{T} <: AbstractVerbositySpecifier{T}
-    solver_iterations::MessageLevel
-    solver_convergence::MessageLevel
-    performance_timing::MessageLevel
-    performance_memory::MessageLevel
+    solver_iterations::AbstractMessageLevel
+    solver_convergence::AbstractMessageLevel
+    performance_timing::AbstractMessageLevel
+    performance_memory::AbstractMessageLevel
 
     function MyAppVerbosity{T}(;
             solver_iterations = InfoLevel(),

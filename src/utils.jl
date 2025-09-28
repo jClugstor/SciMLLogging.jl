@@ -7,11 +7,11 @@ AbstractVerbositySpecifier{T}
     Base for types which specify which log messages are emitted at what level.
     
 """
-abstract type AbstractVerbositySpecifier{T} end
+abstract type AbstractVerbositySpecifier end
 
 # Utilities 
 
-function message_level(verbose::AbstractVerbositySpecifier{true}, option)
+function message_level(verbose::AbstractVerbositySpecifier, option)
     opt_level = getproperty(verbose, option)
 
     if opt_level isa Silent
@@ -29,12 +29,8 @@ function message_level(verbose::AbstractVerbositySpecifier{true}, option)
     end
 end
 
-function message_level(verbose::AbstractVerbositySpecifier{false}, option)
-    return nothing
-end
-
 function emit_message(
-        f::Function, verbose::AbstractVerbositySpecifier{true}, level, file, line,
+        f::Function, verbose::AbstractVerbositySpecifier, level, file, line,
         _module)
     message = f()
     @static if LOGGING_BACKEND == "core"
@@ -44,7 +40,7 @@ function emit_message(
     end
 end
 
-function emit_message(message::String, verbose::AbstractVerbositySpecifier{true},
+function emit_message(message::String, verbose::AbstractVerbositySpecifier,
         level, file, line, _module)
     @static if LOGGING_BACKEND == "core"
         Core.println(message)
@@ -53,20 +49,12 @@ function emit_message(message::String, verbose::AbstractVerbositySpecifier{true}
     end
 end
 
-function emit_message(message::String, verbose::AbstractVerbositySpecifier{false},
-    level, file, line, _module)
-end 
-
-function emit_message(
-        f, verbose::AbstractVerbositySpecifier{false}, level, file, line, _module)
-end
-
-function emit_message(message::String, verbose::AbstractVerbositySpecifier{true},
+function emit_message(message::String, verbose::AbstractVerbositySpecifier,
     level::Nothing, file, line, _module)
 end 
 
 function emit_message(
-    f::Function, verbose::AbstractVerbositySpecifier{true}, level::Nothing, file, line, _module)
+    f::Function, verbose::AbstractVerbositySpecifier, level::Nothing, file, line, _module)
 end
 
 
@@ -115,8 +103,8 @@ macro SciMLMessage(f_or_message, verb, option, group)
 end
 
 """
-        `verbosity_to_int(verb::MessageLevel)`
-    Takes a `MessageLevel` and gives a corresponding integer value.
+        `verbosity_to_int(verb::AbstractMessageLevel)`
+    Takes a `AbstractMessageLevel` and gives a corresponding integer value.
     Verbosity settings that use integers or enums that hold integers are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
     are mapped to an integer.
@@ -127,7 +115,7 @@ end
     - ErrorLevel() => 3
     - CustomLevel(i) => i
 """
-function verbosity_to_int(verb::MessageLevel)
+function verbosity_to_int(verb::AbstractMessageLevel)
     if verb isa Silent
         return 0
     elseif verb isa InfoLevel
@@ -144,13 +132,13 @@ function verbosity_to_int(verb::MessageLevel)
 end
 
 """
-        `verbosity_to_bool(verb::MessageLevel)`
-    Takes a `MessageLevel` and gives a corresponding boolean value.
+        `verbosity_to_bool(verb::AbstractMessageLevel)`
+    Takes a `AbstractMessageLevel` and gives a corresponding boolean value.
     Verbosity settings that use booleans are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity.
     If the verbosity is `Silent`, then `false` is returned. Otherwise, `true` is returned.
 """
-function verbosity_to_bool(verb::MessageLevel)
+function verbosity_to_bool(verb::AbstractMessageLevel)
     if verb isa Silent
         return false
     else
