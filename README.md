@@ -21,24 +21,26 @@ Consistent logging patterns across the SciML ecosystem
 # Basic Usage
 
 ```julia
-using SciMLLogging: AbstractVerbositySpecifier, MessageLevel, WarnLevel, InfoLevel, Silent, ErrorLevel
+using SciMLLogging: AbstractVerbositySpecifier, AbstractMessageLevel, WarnLevel, InfoLevel, Silent, ErrorLevel
+using ConcreteStructs: @concrete
 using Logging
 
 # Create a simple verbosity structure
-struct MyVerbosity{T} <: AbstractVerbositySpecifier{T}
-    algorithm_choice::MessageLevel
-    iteration_progress::MessageLevel
-
-    function MyVerbosity{T}(;
-            algorithm_choice = WarnLevel(),
-            iteration_progress = InfoLevel()
-    ) where {T}
-        new{T}(algorithm_choice, iteration_progress)
-    end
+@concrete struct MyVerbosity <: AbstractVerbositySpecifier
+    algorithm_choice
+    iteration_progress
 end
 
-# Create enabled verbosity
-verbose = MyVerbosity{true}()
+# Constructor with defaults
+function MyVerbosity(;
+        algorithm_choice = WarnLevel(),
+        iteration_progress = InfoLevel()
+)
+    MyVerbosity(algorithm_choice, iteration_progress)
+end
+
+# Create verbosity instance
+verbose = MyVerbosity()
 
 # Log messages at different levels
 @SciMLMessage("Selected algorithm: GMRES", verbose, :algorithm_choice)
@@ -66,34 +68,48 @@ SciMLLogging supports several verbosity levels:
 # Creating Custom Verbosity Types
 
  1. Define a structure for each group of verbosity options
- 2. Create a main verbosity struct that inherits from AbstractVerbositySpecifier{T}
- 3. Define constructors for easy creation and default values
+ 2. Create a main verbosity struct that inherits from AbstractVerbositySpecifier
+ 3. Use `@concrete` from ConcreteStructs.jl for better performance (recommended)
+ 4. Define constructors for easy creation and default values
     Example:
 
 ```julia
-# Main verbosity struct with direct LogLevel fields
-struct MyAppVerbosity{T} <: AbstractVerbositySpecifier{T}
-    solver_iterations::MessageLevel
-    solver_convergence::MessageLevel
-    performance_timing::MessageLevel
-    performance_memory::MessageLevel
+using ConcreteStructs: @concrete
 
-    function MyAppVerbosity{T}(;
-            solver_iterations = InfoLevel(),
-            solver_convergence = WarnLevel(),
-            performance_timing = Silent(),
-            performance_memory = Silent()
-    ) where {T}
-        new{T}(solver_iterations, solver_convergence, performance_timing, performance_memory)
-    end
+# Main verbosity struct with direct message level fields
+@concrete struct MyAppVerbosity <: AbstractVerbositySpecifier
+    solver_iterations
+    solver_convergence
+    performance_timing
+    performance_memory
 end
 
-# Constructor with enable/disable parameter
-MyAppVerbosity(; enable = true, kwargs...) = MyAppVerbosity{enable}(; kwargs...)
+# Constructor with defaults
+function MyAppVerbosity(;
+        solver_iterations = InfoLevel(),
+        solver_convergence = WarnLevel(),
+        performance_timing = Silent(),
+        performance_memory = Silent()
+)
+    MyAppVerbosity(solver_iterations, solver_convergence, performance_timing, performance_memory)
+end
 ```
 
-Integration with Julia's Logging System
-SciMLVerbosity integrates with Julia's built-in logging system. You can customize how logs are handled with the SciMLLogger,
+# Performance Recommendation
+
+For better performance, it's recommended to use `@concrete` from ConcreteStructs.jl when defining your verbosity types. This eliminates type instabilities and improves runtime performance:
+
+```julia
+using ConcreteStructs: @concrete
+
+@concrete struct FastVerbosity <: AbstractVerbositySpecifier
+    category1
+    category2
+end
+```
+
+# Integration with Julia's Logging System
+SciMLLogging integrates with Julia's built-in logging system. You can customize how logs are handled with the SciMLLogger,
 which allows you to direct logs to different outputs. Or you can use your own logger based on the Julia logging system or LoggingExtras.jl.
 
 ```julia
@@ -113,11 +129,14 @@ end
 ```
 
 Disabling Verbosity
-To completely disable verbosity without changing your code:
+To disable specific message categories:
 
 ```julia
-# Create disabled verbosity
-silent = MyVerbosity{false}()
+# Create verbosity with silent categories
+silent = MyVerbosity(
+    algorithm_choice = Silent(),
+    iteration_progress = Silent()
+)
 
 # This won't produce any output
 @SciMLMessage("This message won't be shown", silent, :algorithm_choice)

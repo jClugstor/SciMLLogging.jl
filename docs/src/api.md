@@ -8,7 +8,7 @@ CurrentModule = SciMLLogging
 
 ```@docs
 AbstractVerbositySpecifier
-MessageLevel
+AbstractMessageLevel
 Silent
 InfoLevel
 WarnLevel

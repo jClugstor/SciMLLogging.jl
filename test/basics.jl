@@ -1,53 +1,55 @@
 using SciMLLogging
-using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset, MessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
+using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset, AbstractMessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
 using Logging
 using Test
 
 # Structs for testing package - simplified structure
-struct TestVerbosity{T} <: AbstractVerbositySpecifier{T}
-    test1::MessageLevel
-    test2::MessageLevel
-    test3::MessageLevel
-    test4::MessageLevel
+struct TestVerbosity <: AbstractVerbositySpecifier
+    test1
+    test2
+    test3
+    test4
 
-    function TestVerbosity{T}(;
+    function TestVerbosity(;
             test1 = WarnLevel(),
             test2 = InfoLevel(),
             test3 = ErrorLevel(),
-            test4 = Silent()) where {T}
-        new{T}(test1, test2, test3, test4)
+            test4 = Silent())
+        new(test1, test2, test3, test4)
     end
 end
 
-TestVerbosity() = TestVerbosity{true}()
-TestVerbosity(enabled::Bool) = enabled ? TestVerbosity{true}() : TestVerbosity{false}()
-
 function TestVerbosity(preset::VerbosityPreset)
     if preset isa SciMLLogging.None
-        TestVerbosity{false}()
+        TestVerbosity(
+            test1 = Silent(),
+            test2 = Silent(),
+            test3 = Silent(),
+            test4 = Silent()
+        )
     elseif preset isa SciMLLogging.All
-        TestVerbosity{true}(
+        TestVerbosity(
             test1 = InfoLevel(),
             test2 = InfoLevel(),
             test3 = InfoLevel(),
             test4 = InfoLevel()
         )
     elseif preset isa Minimal
-        TestVerbosity{true}(
+        TestVerbosity(
             test1 = ErrorLevel(),
             test2 = Silent(),
             test3 = ErrorLevel(),
             test4 = Silent()
         )
     else
-        TestVerbosity{true}()
+        TestVerbosity()
     end
 end
 
 # Tests 
 
 @testset "Basic tests" begin
-    verbose = TestVerbosity{true}()
+    verbose = TestVerbosity()
 
     @test_logs (:warn, "Test1") @SciMLMessage("Test1", verbose, :test1)
     @test_logs (:info, "Test2") @SciMLMessage("Test2", verbose, :test2)
@@ -80,15 +82,20 @@ end
 end
 
 @testset "Disabled verbosity" begin
-    verbose_off = TestVerbosity{false}()
+    verbose_off = TestVerbosity(
+        test1 = Silent(),
+        test2 = Silent(),
+        test3 = Silent(),
+        test4 = Silent()
+    )
 
-    # Should not log anything when verbosity is disabled
+    # Should not log anything when all categories are silent
     @test_logs min_level = Logging.Debug @SciMLMessage("Should not appear", verbose_off, :test1)
     @test_logs min_level = Logging.Debug @SciMLMessage("Should not appear", verbose_off, :test2)
 end
 
 @testset "Backwards compatibility" begin
-    verbose = TestVerbosity{true}()
+    verbose = TestVerbosity()
 
     # Test 4-argument version for backwards compatibility
     # The group argument should be ignored but the macro should still work
@@ -103,7 +110,7 @@ end
 end
 
 @testset "Nested @SciMLMessage macros" begin
-    verbose = TestVerbosity{true}()
+    verbose = TestVerbosity()
 
     # Test that @SciMLMessage can be called inside another @SciMLMessage function block
     @test_logs (:warn, "Inner message from nested call") (:info, "Outer message with nested result") begin

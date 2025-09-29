@@ -8,7 +8,7 @@ include("verbosity.jl")
 include("utils.jl")
 
 # Export public API
-export AbstractVerbositySpecifier, VerbosityPreset, MessageLevel
+export AbstractVerbositySpecifier, VerbosityPreset, AbstractMessageLevel
 export InfoLevel, WarnLevel, ErrorLevel, CustomLevel, Silent
 export @SciMLMessage
 export verbosity_to_int, verbosity_to_bool

@@ -13,17 +13,17 @@ using SciMLLogging
 
 # Example VerbositySpecifier from a hypothetical solver package
 struct SolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::MessageLevel    # Controls startup messages
-    iterations::MessageLevel        # Controls per-iteration output
-    convergence::MessageLevel       # Controls convergence messages
-    warnings::MessageLevel          # Controls warning messages
+    initialization::AbstractMessageLevel    # Controls startup messages
+    iterations::AbstractMessageLevel        # Controls per-iteration output
+    convergence::AbstractMessageLevel       # Controls convergence messages
+    warnings::AbstractMessageLevel          # Controls warning messages
 end
 ```
 
 **What this means:**
 - **`T` parameter**: Controls whether logging is enabled (`T=true`) or disabled (`T=false`)
 - **Each field**: Represents a category of messages the package can emit
-- **MessageLevel values**: Can be `Silent()`, `InfoLevel()`, `WarnLevel()`, `ErrorLevel()`, or `CustomLevel(n)` for custom levels
+- **AbstractMessageLevel values**: Can be `Silent()`, `InfoLevel()`, `WarnLevel()`, `ErrorLevel()`, or `CustomLevel(n)` for custom levels
 
 When `T=false`, all logging is disabled with zero runtime overhead. When `T=true`, each category can be individually controlled.
 
