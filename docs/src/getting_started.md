@@ -110,8 +110,8 @@ end
 
 ## Next Steps
 
-- **For end users**: See the [User Guide](user_tutorial.md) for detailed information about controlling package verbosity
-- **For package developers**: Check the [Developer Guide](developer_tutorial.md) to learn how to integrate SciMLLogging into your packages
+- **For end users**: See the [User Guide](tutorial/user_tutorial.md) for detailed information about controlling package verbosity
+- **For package developers**: Check the [Developer Guide](tutorial/developer_tutorial.md) to learn how to integrate SciMLLogging into your packages
 
 ## Getting Help
 
