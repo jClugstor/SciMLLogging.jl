@@ -12,7 +12,7 @@ AbstractVerbosityPreset
 
 ### None Preset
 ```@docs
-None
+SciMLLogging.None
 ```
 
 The `None` preset is for when you want no output whatsoever.
