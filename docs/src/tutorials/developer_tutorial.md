@@ -14,7 +14,10 @@ SciMLLogging.jl provides four main components for package developers:
 ### AbstractVerbositySpecifier
     `AbstractVerbositySpecifier` is the base type that package developers implement a subtype of to create custom verbosity type for their packages.
       
-### @SciMLMessage     
+### @SciMLMessage 
+```@docs
+@SciMLMessage
+```    
 In order to use the the `@SciMLMessage` macro, simply choose which of the fields of your `AbstractVerbositySpecifier` should control that particular message. Then when the macro is called, the field of the verbosity object corresponding with the `option` argument to the macro is used to control the logging of the message. 
 
 
