@@ -2,8 +2,8 @@ pages = [
     "Home" => "index.md",
     "Getting Started" => "getting_started.md",
     "Tutorials" => [
-        "User Guide" => "user_tutorial.md",
-        "Developer Guide" => "developer_tutorial.md",
+        "User Guide" => "tutorials/user_tutorial.md",
+        "Developer Guide" => "tutorials/developer_tutorial.md",
     ],
     "Manual" => [
         "Message Levels" => "manual/manual_message_levels.md",
