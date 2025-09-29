@@ -3,8 +3,9 @@
 const LOGGING_BACKEND = @load_preference("logging_backend", "logging")
 
 """
-AbstractVerbositySpecifier{T}
-    Base for types which specify which log messages are emitted at what level.
+    `AbstractVerbositySpecifier`
+
+Base for types which specify which log messages are emitted at what level.
     
 """
 abstract type AbstractVerbositySpecifier end
@@ -59,6 +60,8 @@ end
 
 
 """
+    `@SciMLMessage(message, verbosity, option)`
+
 A macro that emits a log message based on the log level specified in the `option` of the `AbstractVerbositySpecifier` supplied.
 
 `f_or_message` may be a message String, or a 0-argument function that returns a String.
@@ -104,6 +107,7 @@ end
 
 """
         `verbosity_to_int(verb::AbstractMessageLevel)`
+
     Takes a `AbstractMessageLevel` and gives a corresponding integer value.
     Verbosity settings that use integers or enums that hold integers are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
@@ -133,6 +137,7 @@ end
 
 """
         `verbosity_to_bool(verb::AbstractMessageLevel)`
+        
     Takes a `AbstractMessageLevel` and gives a corresponding boolean value.
     Verbosity settings that use booleans are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity.
@@ -147,7 +152,7 @@ function verbosity_to_bool(verb::AbstractMessageLevel)
 end
 
 """
-    set_logging_backend(backend::String)
+    `set_logging_backend(backend::String)``
 
 Set the logging backend preference. Valid options are:
 - "logging": Use Julia's standard Logging system (default)
@@ -165,7 +170,7 @@ function set_logging_backend(backend::String)
 end
 
 """
-    get_logging_backend() -> String
+    `get_logging_backend()`
 
 Get the current logging backend preference.
 """
@@ -174,7 +179,7 @@ function get_logging_backend()
 end
 
 """
-    SciMLLogger(; kwargs...)
+    `SciMLLogger(; kwargs...)`
 
 Create a logger that routes messages to REPL and/or files based on log level.
 

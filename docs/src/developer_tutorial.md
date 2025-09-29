@@ -6,7 +6,7 @@ This tutorial is for Julia package developers who want to integrate SciMLLogging
 
 SciMLLogging.jl provides four main components for package developers:
 
-1. `AbstractVerbositySpecifier{T}` - Base type for creating custom verbosity types
+1. `AbstractVerbositySpecifier` - Base type for creating custom verbosity types
 2. `@SciMLMessage` - Macro for emitting conditional log messages
 3.  Log levels - Predefined log levels (`Silent`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, `CustomLevel(n)`)
 4.  Verbosity preset levels - `None`, `Minimal`, `Standard`, `Detailed`, `All`
@@ -53,63 +53,62 @@ Define a struct that subtypes `AbstractVerbositySpecifier{T}`:
 
 ```julia
 using SciMLLogging
+using ConcreteStructs: @concrete
 
-struct MySolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::AbstractMessageLevel
-    iterations::AbstractMessageLevel
-    convergence::AbstractMessageLevel
-    warnings::AbstractMessageLevel
+@concrete struct MySolverVerbosity <: AbstractVerbositySpecifier
+    initialization
+    iterations
+    convergence
+    warnings
+end
 
-    function MySolverVerbosity{T}(;
+# Constructor with defaults
+function MySolverVerbosity(;
         initialization = InfoLevel(),
         iterations = Silent(),
         convergence = InfoLevel(),
         warnings = WarnLevel()
-    ) where T
-        new{T}(initialization, iterations, convergence, warnings)
-    end
+)
+    MySolverVerbosity(initialization, iterations, convergence, warnings)
 end
 ```
+
+**Key Design Principles:**
+- Use `@concrete` from ConcreteStructs.jl for better performance (eliminates type instabilities)
+- Each field represents a category of messages your package can emit
+- Provide sensible defaults that work for most users
+- Use keyword arguments for flexibility
+
 ## Step 3: Add Convenience Constructors
 
 Make it easy for users to create verbosity instances. Perhaps include a constructor that can take a VerbosityPreset, and use it to set the rest of the fields, and a constructor that takes all keyword arguments:
 
 ```julia
-# Default enabled verbosity
-MySolverVerbosity() = MySolverVerbosity{true}()
-
-# Boolean constructor
-MySolverVerbosity(enabled::Bool) = enabled ? MySolverVerbosity{true}() : MySolverVerbosity{false}()
-
-function MySolverVerbosity{T}(;
-        initialization = InfoLevel(),
-        iterations = Silent(),
-        convergence = InfoLevel(),
-        error_control = WarnLevel()
-    ) where T
-        MySolverVerbosity{T}(initialization, iterations, convergence, error_control)
-    end
-end 
 # Preset-based constructor (optional)
 function MySolverVerbosity(preset::AbstractVerbosityPreset)
     if preset isa None
-        MySolverVerbosity{false}()
+        MySolverVerbosity(
+            initialization = Silent(),
+            iterations = Silent(),
+            convergence = Silent(),
+            warnings = Silent()
+        )
     elseif preset isa All
-        MySolverVerbosity{true}(
+        MySolverVerbosity(
             initialization = InfoLevel(),
             iterations = InfoLevel(),
             convergence = InfoLevel(),
             error_control = WarnLevel()
         )
     elseif preset isa Minimal
-        MySolverVerbosity{true}(
+        MySolverVerbosity(
             initialization = Silent(),
             iterations = Silent(),
             convergence = ErrorLevel(),
             error_control = ErrorLevel()
         )
     else
-        MySolverVerbosity{true}()  # Default
+        MySolverVerbosity()  # Default
     end
 end
 ```
@@ -166,6 +165,23 @@ Controls verbosity output from MySolver functions.
 - `MySolverVerbosity(false)`: Disabled (zero overhead)
 - `MySolverVerbosity(All())`: Enable all message categories
 - `MySolverVerbosity(Minimal())`: Only errors and convergence
+
+# Example
+```julia
+# Default verbosity
+verbose = MySolverVerbosity()
+
+# Custom verbosity - show everything except iterations
+verbose = MySolverVerbosity(iterations = Silent())
+
+# Silent mode
+verbose = MySolverVerbosity(
+    initialization = Silent(),
+    iterations = Silent(),
+    convergence = Silent(),
+    warnings = Silent()
+)
+```
 """
 ```
 
@@ -187,7 +203,12 @@ using Logging
     end
 
     # Test silent mode produces no output
-    silent = MySolverVerbosity(false)
+    silent = MySolverVerbosity(
+        initialization = Silent(),
+        iterations = Silent(),
+        convergence = Silent(),
+        warnings = Silent()
+    )
     @test_logs min_level=Logging.Debug begin
         my_solve(test_problem, silent)
     end
@@ -195,6 +216,12 @@ end
 ```
 
 ## Best Practices
+
+### Performance
+- Use `@concrete` from ConcreteStructs.jl for better performance
+- Use function-based messages for expensive computations
+- Set fields to `Silent()` to disable specific message categories with zero overhead
+- Consider message frequency - don't spam users with too many messages
 
 ### User Experience
 - Provide sensible defaults that work for most users
@@ -212,16 +239,18 @@ end
 For specialized needs, you can create custom log levels:
 
 ```julia
-struct MySolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    debug::AbstractMessageLevel
-    # ... other fields
+using ConcreteStructs: @concrete
 
-    function MySolverVerbosity{T}(;
-        debug = CustomLevel(-1000),  # Custom level below Info
-        # ... other defaults
-    ) where T
-        new{T}(debug, ...)
-    end
+@concrete struct MySolverVerbosity <: AbstractVerbositySpecifier
+    debug
+    # ... other fields
+end
+
+function MySolverVerbosity(;
+    debug = CustomLevel(-1000),  # Custom level below Info
+    # ... other defaults
+)
+    MySolverVerbosity(debug, ...)
 end
 ```
 
@@ -233,16 +262,15 @@ Here's a complete minimal example:
 module ExampleSolver
 
 using SciMLLogging
+using ConcreteStructs: @concrete
 import SciMLLogging: AbstractVerbositySpecifier
 
-struct ExampleVerbosity{T} <: AbstractVerbositySpecifier{T}
-    progress::AbstractMessageLevel
-
-    ExampleVerbosity{T}(progress = InfoLevel()) where T = new{T}(progress)
+@concrete struct ExampleVerbosity <: AbstractVerbositySpecifier
+    progress
 end
 
-ExampleVerbosity() = ExampleVerbosity{true}()
-ExampleVerbosity(enabled::Bool) = enabled ? ExampleVerbosity{true}() : ExampleVerbosity{false}()
+# Constructor with default
+ExampleVerbosity(; progress = InfoLevel()) = ExampleVerbosity(progress)
 
 function solve_example(n::Int, verbose::ExampleVerbosity)
     result = 0

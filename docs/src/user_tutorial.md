@@ -9,22 +9,23 @@ Before diving into usage, let's understand what a VerbositySpecifier looks like 
 
 ```julia
 using SciMLLogging
+using ConcreteStructs: @concrete
 
 # Example VerbositySpecifier from a hypothetical solver package
-struct SolverVerbosity{T} <: AbstractVerbositySpecifier{T}
-    initialization::AbstractMessageLevel    # Controls startup messages
-    iterations::AbstractMessageLevel        # Controls per-iteration output
-    convergence::AbstractMessageLevel       # Controls convergence messages
-    warnings::AbstractMessageLevel          # Controls warning messages
+@concrete struct SolverVerbosity <: AbstractVerbositySpecifier
+    initialization    # Controls startup messages
+    iterations        # Controls per-iteration output
+    convergence       # Controls convergence messages
+    warnings          # Controls warning messages
 end
 ```
 
 **What this means:**
-- **`T` parameter**: Controls whether logging is enabled (`T=true`) or disabled (`T=false`)
 - **Each field**: Represents a category of messages the package can emit
-- **AbstractMessageLevel values**: Can be `Silent()`, `InfoLevel()`, `WarnLevel()`, `ErrorLevel()`, or `CustomLevel(n)` for custom levels
+- **Field values**: Can be `Silent()`, `InfoLevel()`, `WarnLevel()`, `ErrorLevel()`, or `CustomLevel(n)` for custom levels
+- **`@concrete`**: Used for better performance by eliminating type instabilities
 
-When `T=false`, all logging is disabled with zero runtime overhead. When `T=true`, each category can be individually controlled.
+Each category can be individually controlled by setting the field to the appropriate message level.
 
 ## Quick Start
 
@@ -36,7 +37,7 @@ Here's an example of how one might use a packages `AbstractVerbositySpecifier` i
 
 ```julia
 # Example: Customizing a solver's verbosity
-verbose_settings = SolverVerbosity{true}(
+verbose_settings = SolverVerbosity(
     initialization = InfoLevel(),      # Show startup messages
     iterations = Silent(),        # Don't show each iteration
     convergence = InfoLevel(),         # Show when it converges
@@ -47,7 +48,7 @@ result = solve(problem, verbose = verbose_settings)
 ```
 
 **Explanation of the example above:**
-- `SolverVerbosity{true}()` creates an enabled verbosity specifier
+- `SolverVerbosity()` creates a verbosity specifier with the given settings
 - `initialization = InfoLevel()` means startup messages will be shown as informational logs
 - `iterations = Silent()` means iteration progress won't be shown at all
 - `convergence = InfoLevel()` means messages related to convergence will be shown as informational logs
@@ -175,7 +176,7 @@ When troubleshooting problems, enable maximum verbosity:
 result = solve(problematic_case, verbose = SolverVerbosity(All()))
 
 # Or create custom settings to focus on specific aspects
-debug_verbose = SolverVerbosity{true}(
+debug_verbose = SolverVerbosity(
     initialization = InfoLevel(),
     iterations = InfoLevel(),        # Now show iterations for debugging
     convergence = InfoLevel(),
