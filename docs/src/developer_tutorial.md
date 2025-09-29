@@ -60,7 +60,7 @@ MySolverVerbosity() = MySolverVerbosity{true}()
 MySolverVerbosity(enabled::Bool) = enabled ? MySolverVerbosity{true}() : MySolverVerbosity{false}()
 
 # Preset-based constructor (optional)
-function MySolverVerbosity(preset::VerbosityPreset)
+function MySolverVerbosity(preset::AbstractVerbosityPreset)
     if preset isa None
         MySolverVerbosity{false}()
     elseif preset isa All

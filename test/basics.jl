@@ -1,5 +1,5 @@
 using SciMLLogging
-using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, VerbosityPreset, AbstractMessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
+using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, AbstractVerbosityPreset, AbstractMessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
 using Logging
 using Test
 
@@ -19,7 +19,7 @@ struct TestVerbosity <: AbstractVerbositySpecifier
     end
 end
 
-function TestVerbosity(preset::VerbosityPreset)
+function TestVerbosity(preset::AbstractVerbosityPreset)
     if preset isa SciMLLogging.None
         TestVerbosity(
             test1 = Silent(),

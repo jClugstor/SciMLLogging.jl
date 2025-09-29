@@ -63,7 +63,7 @@ struct CustomLevel <: AbstractMessageLevel
 end
 
 """
-    VerbosityPreset
+    AbstractVerbosityPreset
 
 Abstract base type for predefined verbosity configurations.
 
@@ -75,47 +75,47 @@ needing to specify individual message categories. Concrete subtypes include:
 - `Standard`: Balanced verbosity for typical use
 - `Detailed`: Comprehensive verbosity for debugging
 """
-abstract type VerbosityPreset end
+abstract type AbstractVerbosityPreset end
 
 """
-    None <: VerbosityPreset
+    None <: AbstractVerbosityPreset
 
 Preset that disables all verbosity. When used, typically results in
 a verbosity specifier with `T=false`, providing zero runtime overhead.
 """
-struct None <: VerbosityPreset end
+struct None <: AbstractVerbosityPreset end
 
 """
-    Minimal <: VerbosityPreset
+    Minimal <: AbstractVerbosityPreset
 
 Preset that shows only essential messages. Typically includes only warnings,
 errors, and critical status information while suppressing routine progress
 and debugging messages.
 """
-struct Minimal <: VerbosityPreset end
+struct Minimal <: AbstractVerbosityPreset end
 
 """
-    Standard <: VerbosityPreset
+    Standard <: AbstractVerbosityPreset
 
 Preset that provides balanced verbosity suitable for typical usage.
 Shows important progress and status information without overwhelming
 the user with details.
 """
-struct Standard <: VerbosityPreset end
+struct Standard <: AbstractVerbosityPreset end
 
 """
-    Detailed <: VerbosityPreset
+    Detailed <: AbstractVerbosityPreset
 
 Preset that provides comprehensive verbosity for debugging and detailed
 analysis. Shows most or all available message categories to help with
 troubleshooting and understanding program behavior.
 """
-struct Detailed <: VerbosityPreset end
+struct Detailed <: AbstractVerbosityPreset end
 
 """
-    All <: VerbosityPreset
+    All <: AbstractVerbosityPreset
 
 Preset that enables maximum verbosity. All message categories are typically
 set to show informational messages or their appropriate levels.
 """
-struct All <: VerbosityPreset end
+struct All <: AbstractVerbosityPreset end
