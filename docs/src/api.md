@@ -14,7 +14,7 @@ InfoLevel
 WarnLevel
 ErrorLevel
 CustomLevel
-VerbosityPreset
+AbstractVerbosityPreset
 None
 All
 Minimal
