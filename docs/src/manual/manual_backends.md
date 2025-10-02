@@ -42,7 +42,7 @@ end
 
 ## Core Backend
 
-Uses `Core.println` for direct console output. Simpler but less flexible.
+Uses `Core.println` for direct console output. Simpler but less flexible. This allows messages to emitted, while still being compatible with static compilation and JuliaC. 
 
 ## SciMLLogger
 

@@ -27,14 +27,6 @@ all_verbose = MyPackageVerbosity(All())        # Maximum verbosity
 # Use in your code
 result = solve(problem, verbose = standard_verbose)
 ```
-
-**Available Presets:**
-- `None()`: No output at all (zero overhead)
-- `Minimal()`: Only essential messages and warnings
-- `Standard()`: Balanced verbosity for typical usage
-- `Detailed()`: Comprehensive information for debugging
-- `All()`: Maximum verbosity
-
 ## Custom Configuration
 
 For more control, packages typically allow you to configure individual message categories:
@@ -81,6 +73,15 @@ For simpler output without the logging infrastructure:
 # Switch to simple println-style output (r)
 SciMLLogging.set_logging_backend("core")
 ```
+This makes the logging compatible with binary building via JuliaC and reduces the overhead. 
+
+### Switching Back
+
+To switch back to using the logging infrastructure:
+```julia
+SciMLLogging.set_logging_backend("logging")
+```
+Note that you will need to restart Julia for this to take affect. 
 
 ## Saving Output to Files
 

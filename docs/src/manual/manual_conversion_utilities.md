@@ -7,42 +7,10 @@ SciMLLogging provides utility functions to convert message levels to common form
 ```@docs
 verbosity_to_int
 ```
-
-Convert message levels to integers for packages that use numeric verbosity levels:
-
-```julia
-using SciMLLogging
-
-# Standard levels
-verbosity_to_int(Silent())        # Returns 0
-verbosity_to_int(InfoLevel())     # Returns 1
-verbosity_to_int(WarnLevel())     # Returns 2
-verbosity_to_int(ErrorLevel())    # Returns 3
-
-# Custom levels
-verbosity_to_int(CustomLevel(10)) # Returns 10
-verbosity_to_int(CustomLevel(-5)) # Returns -5
-```
-
 ## Boolean Conversion
 
 ```@docs
 verbosity_to_bool
-```
-
-Convert message levels to booleans for packages that use simple on/off verbosity:
-
-```julia
-using SciMLLogging
-
-# Silent returns false
-verbosity_to_bool(Silent())        # Returns false
-
-# All other levels return true
-verbosity_to_bool(InfoLevel())     # Returns true
-verbosity_to_bool(WarnLevel())     # Returns true
-verbosity_to_bool(ErrorLevel())    # Returns true
-verbosity_to_bool(CustomLevel(5))  # Returns true
 ```
 
 ## Usage Examples
