@@ -93,19 +93,19 @@ function solve_problem(problem; verbose = SolverVerbosity(Standard()))
     # ... solver setup ...
 
     for iteration in 1:max_iterations
-        @SciMLMessage("Iteration $iteration", verbose, :progress)
+        @SciMLMessage("Iteration \$iteration", verbose, :progress)
 
         # ... iteration work ...
 
         if converged
-            @SciMLMessage("Converged after $iteration iterations", verbose, :convergence)
+            @SciMLMessage("Converged after \$iteration iterations", verbose, :convergence)
             break
         end
     end
 
     return result
 end
-
+```
 """
 macro SciMLMessage(f_or_message, verb, option)
     line = __source__.line
