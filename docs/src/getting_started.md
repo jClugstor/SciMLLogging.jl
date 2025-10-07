@@ -81,8 +81,6 @@ To switch back to using the logging infrastructure:
 ```julia
 SciMLLogging.set_logging_backend("logging")
 ```
-Note that you will need to restart Julia for this to take affect. 
-
 ## Saving Output to Files
 
 Combine with Julia's logging to save output:
