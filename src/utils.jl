@@ -16,6 +16,8 @@ function message_level(verbose::AbstractVerbositySpecifier, option)
 
     if opt_level isa Silent
         return nothing
+    elseif opt_level isa DebugLevel
+        return Logging.Debug
     elseif opt_level isa InfoLevel
         return Logging.Info
     elseif opt_level isa WarnLevel
@@ -110,20 +112,23 @@ end
     are mapped to an integer.
 
     - Silent() => 0
-    - InfoLevel() => 1
-    - WarnLevel() => 2
-    - ErrorLevel() => 3
+    - DebugLevel() => 1
+    - InfoLevel() => 2
+    - WarnLevel() => 3
+    - ErrorLevel() => 4
     - CustomLevel(i) => i
 """
 function verbosity_to_int(verb::AbstractMessageLevel)
     if verb isa Silent
         return 0
-    elseif verb isa InfoLevel
+    elseif verb isa DebugLevel
         return 1
-    elseif verb isa WarnLevel
+    elseif verb isa InfoLevel
         return 2
-    elseif verb isa ErrorLevel
+    elseif verb isa WarnLevel
         return 3
+    elseif verb isa ErrorLevel
+        return 4
     elseif verb isa CustomLevel
         return verb.level
     else
@@ -179,20 +184,27 @@ end
 Create a logger that routes messages to REPL and/or files based on log level.
 
 # Keyword Arguments
+- `debug_repl = false`: Show debug messages in REPL
 - `info_repl = true`: Show info messages in REPL
 - `warn_repl = true`: Show warnings in REPL
 - `error_repl = true`: Show errors in REPL
+- `debug_file = nothing`: File path for debug messages
 - `info_file = nothing`: File path for info messages
 - `warn_file = nothing`: File path for warnings
 - `error_file = nothing`: File path for errors
 """
-function SciMLLogger(; info_repl = true, warn_repl = true, error_repl = true,
-        info_file = nothing, warn_file = nothing, error_file = nothing)
+function SciMLLogger(; debug_repl = false, info_repl = true, warn_repl = true, error_repl = true,
+        debug_file = nothing, info_file = nothing, warn_file = nothing, error_file = nothing)
+    debug_sink = isnothing(debug_file) ? NullLogger() : FileLogger(debug_file)
     info_sink = isnothing(info_file) ? NullLogger() : FileLogger(info_file)
     warn_sink = isnothing(warn_file) ? NullLogger() : FileLogger(warn_file)
     error_sink = isnothing(error_file) ? NullLogger() : FileLogger(error_file)
 
     repl_filter = EarlyFilteredLogger(current_logger()) do log
+        if log.level == Logging.Debug && debug_repl
+            return true
+        end
+
         if log.level == Logging.Info && info_repl
             return true
         end
@@ -208,6 +220,10 @@ function SciMLLogger(; info_repl = true, warn_repl = true, error_repl = true,
         return false
     end
 
+    debug_filter = EarlyFilteredLogger(debug_sink) do log
+        log.level == Logging.Debug
+    end
+
     info_filter = EarlyFilteredLogger(info_sink) do log
         log.level == Logging.Info
     end
@@ -220,5 +236,5 @@ function SciMLLogger(; info_repl = true, warn_repl = true, error_repl = true,
         log.level == Logging.Error
     end
 
-    TeeLogger(repl_filter, info_filter, warn_filter, error_filter)
+    TeeLogger(repl_filter, debug_filter, info_filter, warn_filter, error_filter)
 end
