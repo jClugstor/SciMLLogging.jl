@@ -32,7 +32,7 @@ function message_level(verbose::AbstractVerbositySpecifier, option)
 end
 
 function emit_message(
-        f::Function, verbose::AbstractVerbositySpecifier, level, file, line,
+        f::Function, level, file, line,
         _module)
     message = f()
     @static if LOGGING_BACKEND == "core"
@@ -40,23 +40,32 @@ function emit_message(
     else
         Base.@logmsg level message _file=file _line=line _module=_module
     end
+
+    if level == Logging.Error
+        throw(ErrorException(message))
+    end 
 end
 
-function emit_message(message::String, verbose::AbstractVerbositySpecifier,
+function emit_message(message::String,
         level, file, line, _module)
     @static if LOGGING_BACKEND == "core"
         Core.println(message)
     else
         Base.@logmsg level message _file=file _line=line _module=_module
     end
+
+    if level == Logging.Error
+        throw(ErrorException(message))
+    end 
 end
 
-function emit_message(message::String, verbose::AbstractVerbositySpecifier,
+
+function emit_message(message::String,
     level::Nothing, file, line, _module)
 end 
 
 function emit_message(
-    f::Function, verbose::AbstractVerbositySpecifier, level::Nothing, file, line, _module)
+    f::Function, level::Nothing, file, line, _module)
 end
 
 
@@ -91,7 +100,7 @@ macro SciMLMessage(f_or_message, verb, option)
     line = __source__.line
     file = string(__source__.file)
     _module = __module__
-    expr = :(emit_message($(esc(f_or_message)), $(esc(verb)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
+    expr = :(emit_message($(esc(f_or_message)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
     return expr
 end
 
@@ -101,7 +110,7 @@ macro SciMLMessage(f_or_message, verb, option, group)
     file = string(__source__.file)
     _module = __module__
     return :(emit_message(
-        $(esc(f_or_message)), $(esc(verb)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
+        $(esc(f_or_message)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
 end
 
 """
