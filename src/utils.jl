@@ -152,33 +152,6 @@ function verbosity_to_bool(verb::AbstractMessageLevel)
 end
 
 """
-    set_logging_backend(backend::String)
-
-Set the logging backend preference. Valid options are:
-- "logging": Use Julia's standard Logging system (default)
-- "core": Use Core.println for simple output
-
-Note: You must restart Julia for this preference change to take effect.
-"""
-function set_logging_backend(backend::String)
-    if backend in ["logging", "core"]
-        @set_preferences!("logging_backend" => backend)
-        @info("Logging backend set to '$backend'. Restart Julia for changes to take effect!")
-    else
-        throw(ArgumentError("Invalid backend '$backend'. Valid options are: 'logging', 'core'"))
-    end
-end
-
-"""
-    get_logging_backend() -> String
-
-Get the current logging backend preference.
-"""
-function get_logging_backend()
-    return @load_preference("logging_backend", "logging")
-end
-
-"""
     SciMLLogger(; kwargs...)
 
 Create a logger that routes messages to REPL and/or files based on log level.
