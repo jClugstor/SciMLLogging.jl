@@ -6,11 +6,11 @@ pages = [
         "Developer Guide" => "tutorials/developer_tutorial.md",
     ],
     "Manual" => [
-        "Message Levels" => "manual/manual_message_levels.md",
-        "Verbosity Specifiers" => "manual/manual_verbosity_specifiers.md",
-        "Verbosity Presets" => "manual/manual_presets.md",
-        "@SciMLMessage Macro" => "manual/manual_macro.md",
-        "Conversion Utilities" => "manual/manual_conversion_utilities.md",
-        "Logging Backends" => "manual/manual_backends.md"
+        "Message Levels" => "manual/message_levels.md",
+        "Verbosity Specifiers" => "manual/verbosity_specifiers.md",
+        "Verbosity Presets" => "manual/presets.md",
+        "@SciMLMessage Macro" => "manual/macro.md",
+        "Conversion Utilities" => "manual/conversion_utilities.md",
+        "Logging Backends" => "manual/backends.md"
     ]
 ]
