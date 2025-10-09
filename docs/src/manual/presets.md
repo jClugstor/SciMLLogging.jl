@@ -19,7 +19,6 @@ The `None` preset is for when you want no output whatsoever.
 
 **What to include:**
 - Nothing - all message categories should be set to `Silent()`
-- Use this preset when running automated scripts, batch jobs, or when you want complete silence
 
 ### Minimal Preset
 ```@docs
