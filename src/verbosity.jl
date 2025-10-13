@@ -26,15 +26,22 @@ struct Silent <: AbstractMessageLevel end
 
 Debug log level. Messages at this level provide detailed debugging information,
 typically more verbose than informational messages. Useful for development and
-troubleshooting.
+troubleshooting. 
+
+Corresponds to `Logging.Debug == Logging.LogLevel(-1000)` when using the Logging backend.
+
+By default, these messages are not logged at all, and the 
+`JULIA_DEBUG` environment variable needs to be set.
+For details see the [Julia Logging documentation](https://docs.julialang.org/en/v1/stdlib/Logging/#Environment-variables).
 """
 struct DebugLevel <: AbstractMessageLevel end
 
 """
     InfoLevel <: AbstractMessageLevel
 
-Informational log level. Messages at this level provide general information
-about the progress or state of the computation.
+Informational log level. Messages at this level provide general information about the progress or state of the computation. 
+
+Corresponds to `Logging.Info == Logging.LogLevel(0)` when using the Logging backend.
 """
 struct InfoLevel <: AbstractMessageLevel end
 
@@ -43,6 +50,8 @@ struct InfoLevel <: AbstractMessageLevel end
 
 Warning log level. Messages at this level indicate potential issues or
 situations that may require attention but don't prevent execution.
+
+Corresponds to `Logging.Warn == Logging.LogLevel(1000)` when using the Logging backend.
 """
 struct WarnLevel <: AbstractMessageLevel end
 
@@ -51,6 +60,8 @@ struct WarnLevel <: AbstractMessageLevel end
 
 Error log level. Messages at this level indicate serious problems or
 failures in the computation.
+
+Corresponds to `Logging.Warn == Logging.LogLevel(2000)` when using the Logging backend.
 """
 struct ErrorLevel <: AbstractMessageLevel end
 
@@ -59,6 +70,8 @@ struct ErrorLevel <: AbstractMessageLevel end
 
 Custom log level with integer value `n`. This allows creating custom
 severity levels beyond the standard Info/Warn/Error hierarchy.
+
+Corresponds to `Logging.LogLevel(n)`, where `n` is any integer, when using the Logging backend.
 
 Higher integer values typically indicate higher priority/severity.
 
