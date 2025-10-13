@@ -19,6 +19,12 @@ Silent
 
 The `Silent` level is special - it completely suppresses output for a message.
 
+### Debug Level
+```@docs
+DebugLevel
+```
+
+
 ### Information Level
 ```@docs
 InfoLevel
