@@ -17,6 +17,8 @@ function message_level(verbose::AbstractVerbositySpecifier, option)
 
     if opt_level isa Silent
         return nothing
+    elseif opt_level isa DebugLevel
+        return Logging.Debug
     elseif opt_level isa InfoLevel
         return Logging.Info
     elseif opt_level isa WarnLevel
@@ -31,7 +33,7 @@ function message_level(verbose::AbstractVerbositySpecifier, option)
 end
 
 function emit_message(
-        f::Function, verbose::AbstractVerbositySpecifier, level, file, line,
+        f::Function, level, file, line,
         _module)
     message = f()
     @static if LOGGING_BACKEND == "core"
@@ -39,23 +41,32 @@ function emit_message(
     else
         Base.@logmsg level message _file=file _line=line _module=_module
     end
+
+    if level == Logging.Error
+        throw(ErrorException(message))
+    end 
 end
 
-function emit_message(message::String, verbose::AbstractVerbositySpecifier,
+function emit_message(message::String,
         level, file, line, _module)
     @static if LOGGING_BACKEND == "core"
         Core.println(message)
     else
         Base.@logmsg level message _file=file _line=line _module=_module
     end
+
+    if level == Logging.Error
+        throw(ErrorException(message))
+    end 
 end
 
-function emit_message(message::String, verbose::AbstractVerbositySpecifier,
+
+function emit_message(message::String,
     level::Nothing, file, line, _module)
 end 
 
 function emit_message(
-    f::Function, verbose::AbstractVerbositySpecifier, level::Nothing, file, line, _module)
+    f::Function, level::Nothing, file, line, _module)
 end
 
 
@@ -111,7 +122,7 @@ macro SciMLMessage(f_or_message, verb, option)
     line = __source__.line
     file = string(__source__.file)
     _module = __module__
-    expr = :(emit_message($(esc(f_or_message)), $(esc(verb)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
+    expr = :(emit_message($(esc(f_or_message)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
     return expr
 end
 
@@ -121,7 +132,7 @@ macro SciMLMessage(f_or_message, verb, option, group)
     file = string(__source__.file)
     _module = __module__
     return :(emit_message(
-        $(esc(f_or_message)), $(esc(verb)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
+        $(esc(f_or_message)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
 end
 
 """
@@ -139,9 +150,10 @@ end
     # Standard levels
 
     verbosity_to_int(Silent())        # Returns 0
-    verbosity_to_int(InfoLevel())     # Returns 1
-    verbosity_to_int(WarnLevel())     # Returns 2
-    verbosity_to_int(ErrorLevel())    # Returns 3
+    verbosity_to_int(DebugLevel())    # Returns 1
+    verbosity_to_int(InfoLevel())     # Returns 2
+    verbosity_to_int(WarnLevel())     # Returns 3
+    verbosity_to_int(ErrorLevel())    # Returns 4
 
     # Custom levels
 
@@ -152,12 +164,14 @@ end
 function verbosity_to_int(verb::AbstractMessageLevel)
     if verb isa Silent
         return 0
-    elseif verb isa InfoLevel
+    elseif verb isa DebugLevel
         return 1
-    elseif verb isa WarnLevel
+    elseif verb isa InfoLevel
         return 2
-    elseif verb isa ErrorLevel
+    elseif verb isa WarnLevel
         return 3
+    elseif verb isa ErrorLevel
+        return 4
     elseif verb isa CustomLevel
         return verb.level
     else
@@ -223,25 +237,32 @@ function get_logging_backend()
 end
 
 """
-    `SciMLLogger(; kwargs...)`
+    SciMLLogger(; kwargs...)
 
 Create a logger that routes messages to REPL and/or files based on log level.
 
 # Keyword Arguments
+- `debug_repl = false`: Show debug messages in REPL
 - `info_repl = true`: Show info messages in REPL
 - `warn_repl = true`: Show warnings in REPL
 - `error_repl = true`: Show errors in REPL
+- `debug_file = nothing`: File path for debug messages
 - `info_file = nothing`: File path for info messages
 - `warn_file = nothing`: File path for warnings
 - `error_file = nothing`: File path for errors
 """
-function SciMLLogger(; info_repl = true, warn_repl = true, error_repl = true,
-        info_file = nothing, warn_file = nothing, error_file = nothing)
+function SciMLLogger(; debug_repl = false, info_repl = true, warn_repl = true, error_repl = true,
+        debug_file = nothing, info_file = nothing, warn_file = nothing, error_file = nothing)
+    debug_sink = isnothing(debug_file) ? NullLogger() : FileLogger(debug_file)
     info_sink = isnothing(info_file) ? NullLogger() : FileLogger(info_file)
     warn_sink = isnothing(warn_file) ? NullLogger() : FileLogger(warn_file)
     error_sink = isnothing(error_file) ? NullLogger() : FileLogger(error_file)
 
     repl_filter = EarlyFilteredLogger(current_logger()) do log
+        if log.level == Logging.Debug && debug_repl
+            return true
+        end
+
         if log.level == Logging.Info && info_repl
             return true
         end
@@ -257,6 +278,10 @@ function SciMLLogger(; info_repl = true, warn_repl = true, error_repl = true,
         return false
     end
 
+    debug_filter = EarlyFilteredLogger(debug_sink) do log
+        log.level == Logging.Debug
+    end
+
     info_filter = EarlyFilteredLogger(info_sink) do log
         log.level == Logging.Info
     end
@@ -269,5 +294,5 @@ function SciMLLogger(; info_repl = true, warn_repl = true, error_repl = true,
         log.level == Logging.Error
     end
 
-    TeeLogger(repl_filter, info_filter, warn_filter, error_filter)
+    TeeLogger(repl_filter, debug_filter, info_filter, warn_filter, error_filter)
 end

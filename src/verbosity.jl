@@ -5,6 +5,7 @@ Abstract base type for all verbosity log levels in SciMLLogging.
 
 Log levels determine the severity/importance of messages. Concrete subtypes include:
 - `Silent`: No output
+- `DebugLevel`: Debug messages
 - `InfoLevel`: Informational messages
 - `WarnLevel`: Warning messages
 - `ErrorLevel`: Error messages
@@ -19,6 +20,15 @@ Log level that produces no output. When a message category is set to `Silent()`,
 no messages will be emitted for that category.
 """
 struct Silent <: AbstractMessageLevel end
+
+"""
+    DebugLevel <: AbstractMessageLevel
+
+Debug log level. Messages at this level provide detailed debugging information,
+typically more verbose than informational messages. Useful for development and
+troubleshooting.
+"""
+struct DebugLevel <: AbstractMessageLevel end
 
 """
     InfoLevel <: AbstractMessageLevel
