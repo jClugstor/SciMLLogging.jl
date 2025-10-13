@@ -70,7 +70,7 @@ struct DebuggingPreset <: AbstractVerbosityPreset end
 function MyPackageVerbosity(::DebuggingPreset)
     MyPackageVerbosity{true}(
         initialization = InfoLevel(),
-        progress = CustomLevel(-100),  # Extra detailed progress
+        progress = DebugLevel(),  # Extra detailed progress
         convergence = InfoLevel(),
         warnings = WarnLevel(),
         errors = ErrorLevel()

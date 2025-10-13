@@ -8,7 +8,7 @@ SciMLLogging.jl provides four main components for package developers:
 
 1. `AbstractVerbositySpecifier` - Base type for creating custom verbosity types
 2. `@SciMLMessage` - Macro for emitting conditional log messages
-3.  Log levels - Predefined log levels (`Silent`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, `CustomLevel(n)`). These are the fields of the `AbstractVerbositySpecifier`s that determine which messages get logged, and at what log level. 
+3.  Log levels - Predefined log levels (`Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, `CustomLevel(n)`). These are the fields of the `AbstractVerbositySpecifier`s that determine which messages get logged, and at what log level. 
 4.  Verbosity preset levels - `None`, `Minimal`, `Standard`, `Detailed`, `All`. These represent predefined sets of log levels. 
 
 ### AbstractVerbositySpecifier
