@@ -53,7 +53,9 @@ end
 
     @test_logs (:warn, "Test1") @SciMLMessage("Test1", verbose, :test1)
     @test_logs (:info, "Test2") @SciMLMessage("Test2", verbose, :test2)
-    @test_logs (:error, "Test3") @SciMLMessage("Test3", verbose, :test3)
+    @test_logs (:error, "Test3") @test_throws "Test3" begin
+         @SciMLMessage("Test3", verbose, :test3)
+    end
     @test_logs min_level = Logging.Debug @SciMLMessage("Test4", verbose, :test4)
 
     x = 30
@@ -74,8 +76,15 @@ end
     # All preset should log info level messages
     @test_logs (:info, "All preset test") @SciMLMessage("All preset test", verbose_all, :test1)
 
-    # Minimal preset should only log errors
-    @test_logs (:error, "Minimal preset test") @SciMLMessage("Minimal preset test", verbose_minimal, :test1)
+    # Minimal preset should only log errors and throw for error messages
+    @test_logs (:error, "Minimal preset test") @test_throws ErrorException("Minimal preset test") begin
+       @SciMLMessage("Minimal preset test", verbose_minimal, :test1)
+    end
+
+    # Test that minimal preset throws for test3 (which is ErrorLevel)
+    @test_logs (:error, "Minimal error on test3") @test_throws ErrorException("Minimal error on test3") begin
+        @SciMLMessage("Minimal error on test3", verbose_minimal, :test3)
+    end
 
     # None preset should not log anything
     @test_logs min_level = Logging.Debug @SciMLMessage("None preset test", verbose_none, :test1)
@@ -92,21 +101,6 @@ end
     # Should not log anything when all categories are silent
     @test_logs min_level = Logging.Debug @SciMLMessage("Should not appear", verbose_off, :test1)
     @test_logs min_level = Logging.Debug @SciMLMessage("Should not appear", verbose_off, :test2)
-end
-
-@testset "Backwards compatibility" begin
-    verbose = TestVerbosity()
-
-    # Test 4-argument version for backwards compatibility
-    # The group argument should be ignored but the macro should still work
-    @test_logs (:warn, "Backwards compat test") @SciMLMessage("Backwards compat test", verbose, :test1, :ignored_group)
-    @test_logs (:info, "Backwards compat test 2") @SciMLMessage("Backwards compat test 2", verbose, :test2, :another_ignored_group)
-
-    # Test function-based version with 4 arguments
-    x = 42
-    @test_logs (:error, "Backwards function test: 42") @SciMLMessage(verbose, :test3, :ignored_group) do
-        "Backwards function test: $x"
-    end
 end
 
 @testset "Nested @SciMLMessage macros" begin
