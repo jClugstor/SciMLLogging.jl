@@ -92,9 +92,9 @@ errors, and critical status information while suppressing routine progress
 and debugging messages. 
 
 This verbosity preset should set messages related to critical failures and 
-errors that stop computation to `ErrorLevel`. Messages related to potential issues 
-(e.g., convergence problems, parameter choices that may affect results, deprecated features)
-should be set to `WarnLevel()`. All other messages should be set to `Silent()`.
+errors that stop computation to `ErrorLevel`. Messages related to fatal issues 
+(e.g., convergence problems, solver exiting, etc.) should be set to `WarnLevel()`. 
+All other messages should be set to `Silent()`.
 """
 struct Minimal <: AbstractVerbosityPreset end
 
@@ -106,8 +106,8 @@ Shows important progress and status information without overwhelming
 the user with details.
 
 This verbosity preset should include the settings from `Minimal`, while also setting 
-messages such as important initialization messages (e.g., algorithm selection, key parameter values), 
-significant milestones, convergence status, final results to `InfoLevel()` or higher.
+messages such as non-fatal deprecations and critical warnings that require handling 
+to `InfoLevel`.
 """
 struct Standard <: AbstractVerbosityPreset end
 
@@ -122,7 +122,7 @@ This verbosity preset should include the settings from `Standard`, plus progress
 (e.g., iteration counters, intermediate state), performance metrics 
 (e.g., timing information, memory usage), detailed diagnostics, and internal state information.
 The only messages that should be `Silent()` at this preset are very small details that would 
-clutter output even during debugging. 
+clutter output even during debugging, and information that would be expensive to calculate.
 """
 struct Detailed <: AbstractVerbosityPreset end
 
