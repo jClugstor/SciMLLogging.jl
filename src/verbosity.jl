@@ -80,18 +80,17 @@ Abstract base type for predefined verbosity configurations.
 Presets provide convenient ways for users to configure verbosity without
 needing to specify individual message categories. Concrete subtypes include:
 - `None`: Disable all verbosity
-- `All`: Enable all message categories
 - `Minimal`: Only essential messages
 - `Standard`: Balanced verbosity for typical use
 - `Detailed`: Comprehensive verbosity for debugging
+- `All`: Enable all message categories
 """
 abstract type AbstractVerbosityPreset end
 
 """
     None <: AbstractVerbosityPreset
 
-Preset that disables all verbosity. When used, typically results in
-a verbosity specifier with `T=false`, providing zero runtime overhead.
+Preset that disables all verbosity. All message categories should be set to to `Silent()`.
 """
 struct None <: AbstractVerbosityPreset end
 
@@ -100,7 +99,12 @@ struct None <: AbstractVerbosityPreset end
 
 Preset that shows only essential messages. Typically includes only warnings,
 errors, and critical status information while suppressing routine progress
-and debugging messages.
+and debugging messages. 
+
+This verbosity preset should set messages related to critical failures and 
+errors that stop computation to `ErrorLevel`. Messages related to fatal issues 
+(e.g., convergence problems, solver exiting, etc.) should be set to `WarnLevel()`. 
+All other messages should be set to `Silent()`.
 """
 struct Minimal <: AbstractVerbosityPreset end
 
@@ -110,6 +114,10 @@ struct Minimal <: AbstractVerbosityPreset end
 Preset that provides balanced verbosity suitable for typical usage.
 Shows important progress and status information without overwhelming
 the user with details.
+
+This verbosity preset should include the settings from `Minimal`, while also setting 
+messages such as non-fatal deprecations and critical warnings that require handling 
+to `InfoLevel`.
 """
 struct Standard <: AbstractVerbosityPreset end
 
@@ -119,6 +127,12 @@ struct Standard <: AbstractVerbosityPreset end
 Preset that provides comprehensive verbosity for debugging and detailed
 analysis. Shows most or all available message categories to help with
 troubleshooting and understanding program behavior.
+
+This verbosity preset should include the settings from `Standard`, plus progress updates 
+(e.g., iteration counters, intermediate state), performance metrics 
+(e.g., timing information, memory usage), detailed diagnostics, and internal state information.
+The only messages that should be `Silent()` at this preset are very small details that would 
+clutter output even during debugging, and information that would be expensive to calculate.
 """
 struct Detailed <: AbstractVerbosityPreset end
 
@@ -127,5 +141,8 @@ struct Detailed <: AbstractVerbosityPreset end
 
 Preset that enables maximum verbosity. All message categories are typically
 set to show informational messages or their appropriate levels.
+
+This verbosity preset should include the settings from `Detailed`, plus even more details.
+At this preset, no messages should be `Silent()`. 
 """
 struct All <: AbstractVerbosityPreset end
