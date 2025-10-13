@@ -8,28 +8,16 @@ Presets provide convenient, predefined verbosity configurations that cover commo
 AbstractVerbosityPreset
 ```
 
-## Standard Presets
+## Available Presets
 
-### None Preset
 ```@docs
 SciMLLogging.None
-```
-### Minimal Preset
-```@docs
 Minimal
-```
-### Standard Preset
-```@docs
 Standard
-```
-### Detailed Preset
-```@docs
 Detailed
-```
-### All Preset
-```@docs
 All
 ```
+
 ## Custom Presets
 
 Packages can define their own preset types for specialized use cases:
