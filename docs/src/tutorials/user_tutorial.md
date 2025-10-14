@@ -55,6 +55,7 @@ result = solve(problem, verbose = verbose_settings)
 
 **Message Levels:**
 - `Silent()`: No output for this category
+- `DebugLevel()`: Lowest priority debug messages
 - `InfoLevel()`: Informational messages
 - `WarnLevel()`: Warning messages
 - `ErrorLevel()`: Error messages

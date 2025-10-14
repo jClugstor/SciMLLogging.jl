@@ -45,6 +45,7 @@ result = solve(problem, verbose = custom_verbose)
 
 **Message Levels:**
 - `Silent()`: No output for this category
+- `DebugLevel()`: Lowest priority messages
 - `InfoLevel()`: Informational messages
 - `WarnLevel()`: Warning messages
 - `ErrorLevel()`: Error messages
