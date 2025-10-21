@@ -121,21 +121,12 @@ macro SciMLMessage(f_or_message, verb, option)
     _module = __module__
     expr = quote 
         emit_message($(esc(f_or_message)),
-            logging_message_level(getfield($(esc(verb)), $(esc(option)))),
+            logging_message_level(getproperty($(esc(verb)), $(esc(option)))),
             $file,
             $line,
             $_module)
     end 
     return expr
-end
-
-# For backwards compat to be not breaking. Also might be used in the future for log filtering.
-macro SciMLMessage(f_or_message, verb, option, group)
-    line = __source__.line
-    file = string(__source__.file)
-    _module = __module__
-    return :(emit_message(
-        $(esc(f_or_message)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
 end
 
 """
