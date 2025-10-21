@@ -12,25 +12,23 @@ abstract type AbstractVerbositySpecifier end
 
 # Utilities 
 
-function message_level(verbose::AbstractVerbositySpecifier, option)
-    opt_level = getproperty(verbose, option)
-
-    if opt_level isa Silent
-        return nothing
-    elseif opt_level isa DebugLevel
+function logging_message_level(option)
+    if option isa DebugLevel
         return Logging.Debug
-    elseif opt_level isa InfoLevel
+    elseif option isa InfoLevel
         return Logging.Info
-    elseif opt_level isa WarnLevel
+    elseif option isa WarnLevel
         return Logging.Warn
-    elseif opt_level isa ErrorLevel
+    elseif option isa ErrorLevel
         return Logging.Error
-    elseif opt_level isa CustomLevel
+    elseif option isa CustomLevel
         return Logging.LogLevel(opt_level.level)
-    else
-        return nothing
     end
 end
+
+function logging_message_level(option::Silent)
+    nothing
+end 
 
 function emit_message(
         f::Function, level, file, line,
@@ -59,7 +57,6 @@ function emit_message(message::String,
         throw(ErrorException(message))
     end 
 end
-
 
 function emit_message(message::String,
     level::Nothing, file, line, _module)
@@ -122,17 +119,14 @@ macro SciMLMessage(f_or_message, verb, option)
     line = __source__.line
     file = string(__source__.file)
     _module = __module__
-    expr = :(emit_message($(esc(f_or_message)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
+    expr = quote 
+        emit_message($(esc(f_or_message)),
+            logging_message_level(getproperty($(esc(verb)), $(esc(option)))),
+            $file,
+            $line,
+            $_module)
+    end 
     return expr
-end
-
-# For backwards compat to be not breaking. Also might be used in the future for log filtering.
-macro SciMLMessage(f_or_message, verb, option, group)
-    line = __source__.line
-    file = string(__source__.file)
-    _module = __module__
-    return :(emit_message(
-        $(esc(f_or_message)), message_level($(esc(verb)), $(esc(option))), $file, $line, $_module))
 end
 
 """
