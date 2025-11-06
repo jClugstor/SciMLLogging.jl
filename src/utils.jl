@@ -22,7 +22,7 @@ function logging_message_level(option)
     elseif option isa ErrorLevel
         return Logging.Error
     elseif option isa CustomLevel
-        return Logging.LogLevel(opt_level.level)
+        return Logging.LogLevel(option.level)
     end
 end
 
@@ -45,7 +45,7 @@ function emit_message(
     end 
 end
 
-function emit_message(message::String,
+function emit_message(message::AbstractString,
         level, file, line, _module)
     @static if LOGGING_BACKEND == "core"
         Core.println(message)
@@ -58,7 +58,7 @@ function emit_message(message::String,
     end 
 end
 
-function emit_message(message::String,
+function emit_message(message::AbstractString,
     level::Nothing, file, line, _module)
 end 
 
