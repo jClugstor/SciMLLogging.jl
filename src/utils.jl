@@ -66,6 +66,14 @@ function emit_message(
     f::Function, level::Nothing, file, line, _module)
 end
 
+function get_message_level(verb::AbstractVerbositySpecifier, option)
+    return logging_message_level(getproperty(verb, option))
+end
+
+function get_message_level(verb::Bool, _)
+    return verb ? logging_message_level(WarnLevel()) : logging_message_level(Silent())
+end
+
 
 """
     `@SciMLMessage(message, verbosity, option)`
@@ -114,18 +122,24 @@ function solve_problem(problem; verbose = SolverVerbosity(Standard()))
     return result
 end
 ```
+
+Alternatively, the macro also accepts a boolean value for `verb`:
+
+When `verb` is a boolean:
+- `true` will emit the message at `WarnLevel()`
+- `false` will suppress the message (equivalent to `Silent()`)
 """
 macro SciMLMessage(f_or_message, verb, option)
     line = __source__.line
     file = string(__source__.file)
     _module = __module__
-    expr = quote 
+    expr = quote
         emit_message($(esc(f_or_message)),
-            logging_message_level(getproperty($(esc(verb)), $(esc(option)))),
+            get_message_level($(esc(verb)), $(esc(option))),
             $file,
             $line,
             $_module)
-    end 
+    end
     return expr
 end
 
