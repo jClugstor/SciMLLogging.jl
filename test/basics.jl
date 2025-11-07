@@ -126,3 +126,25 @@ end
         end
     end
 end
+
+@testset "Boolean verbosity" begin
+    # Test with true - should emit at WarnLevel
+    @test_logs (:warn, "Message with verbose=true") @SciMLMessage("Message with verbose=true", true, :ignored)
+
+    # Test with false - should not emit anything
+    @test_logs min_level = Logging.Debug @SciMLMessage("Message with verbose=false", false, :ignored)
+
+    # Test with function form and true
+    @test_logs (:warn, "Computed message: 42") @SciMLMessage(true, :ignored) do
+        x = 40 + 2
+        "Computed message: $x"
+    end
+
+    # Test with function form and false - should not compute or emit
+    computation_ran = false
+    @test_logs min_level = Logging.Debug @SciMLMessage(false, :ignored) do
+        computation_ran = true
+        "This should not be computed"
+    end
+    @test !computation_ran  # Verify function was never called when verbose=false
+end
