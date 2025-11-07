@@ -128,23 +128,43 @@ end
 end
 
 @testset "Boolean verbosity" begin
-    # Test with true - should emit at WarnLevel
+    # Test with true - should emit at WarnLevel (three-arg form)
     @test_logs (:warn, "Message with verbose=true") @SciMLMessage("Message with verbose=true", true, :ignored)
 
-    # Test with false - should not emit anything
+    # Test with false - should not emit anything (three-arg form)
     @test_logs min_level = Logging.Debug @SciMLMessage("Message with verbose=false", false, :ignored)
 
-    # Test with function form and true
+    # Test with function form and true (three-arg form)
     @test_logs (:warn, "Computed message: 42") @SciMLMessage(true, :ignored) do
         x = 40 + 2
         "Computed message: $x"
     end
 
-    # Test with function form and false - should not compute or emit
+    # Test with function form and false - should not compute or emit (three-arg form)
     computation_ran = false
     @test_logs min_level = Logging.Debug @SciMLMessage(false, :ignored) do
         computation_ran = true
         "This should not be computed"
     end
     @test !computation_ran  # Verify function was never called when verbose=false
+
+    # Test two-argument form with true
+    @test_logs (:warn, "Two-arg form with true") @SciMLMessage("Two-arg form with true", true)
+
+    # Test two-argument form with false
+    @test_logs min_level = Logging.Debug @SciMLMessage("Two-arg form with false", false)
+
+    # Test two-argument form with function and true
+    @test_logs (:warn, "Two-arg computed: 100") @SciMLMessage(true) do
+        y = 50 * 2
+        "Two-arg computed: $y"
+    end
+
+    # Test two-argument form with function and false
+    computation_ran_2arg = false
+    @test_logs min_level = Logging.Debug @SciMLMessage(false) do
+        computation_ran_2arg = true
+        "This should not be computed either"
+    end
+    @test !computation_ran_2arg  # Verify function was never called when verbose=false
 end

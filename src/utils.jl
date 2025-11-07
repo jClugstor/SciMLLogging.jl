@@ -76,7 +76,8 @@ end
 
 
 """
-    `@SciMLMessage(message, verbosity, option)`
+    `@SciMLMessage(message, verbosity::AbstracVerbositySpecifier, option::Symbol)`
+    `@SciMLMessage(message, verbosity::Bool)`
 
 A macro that emits a log message based on the log level specified in the `option` of the `AbstractVerbositySpecifier` supplied.
 
@@ -128,6 +129,15 @@ Alternatively, the macro also accepts a boolean value for `verb`:
 When `verb` is a boolean:
 - `true` will emit the message at `WarnLevel()`
 - `false` will suppress the message (equivalent to `Silent()`)
+
+The two-argument form `@SciMLMessage(message, verbosity)` can be used when `verbosity` is a `Bool`:
+
+```julia
+function solve_problem(problem; verbose::Bool = true)
+    @SciMLMessage("Starting solver", verbose)
+    # ... solver logic ...
+end
+```
 """
 macro SciMLMessage(f_or_message, verb, option)
     line = __source__.line
@@ -141,6 +151,10 @@ macro SciMLMessage(f_or_message, verb, option)
             $_module)
     end
     return expr
+end
+
+macro SciMLMessage(f_or_message, verb)
+    return esc(:(@SciMLMessage($f_or_message, $verb, :_)))
 end
 
 """
