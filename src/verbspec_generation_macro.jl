@@ -1,16 +1,16 @@
 """
-    @define_verbosity_specifier name begin
+    @verbosity_specifier name begin
         toggles = (...)
-        preset_map = (...)
+        presets = (...)
         groups = (...)
     end
 
 # Example
 ```julia
-@define_verbosity_specifier MyVerbosity begin
+@verbosity_specifier MyVerbosity begin
     toggles = (:toggle1, :toggle2)
 
-    preset_map = (
+    presets = (
         Standard = (
             toggle1 = InfoLevel(),
             toggle2 = WarnLevel()
@@ -23,10 +23,10 @@
 end
 ```
 """
-macro define_verbosity_specifier(name, block)
+macro verbosity_specifier(name, block)
     # Extract the three assignments from the block
     local toggles_expr = nothing
-    local preset_map_expr = nothing
+    local presets_expr = nothing
     local groups_expr = nothing
 
     if block.head == :block
@@ -36,8 +36,8 @@ macro define_verbosity_specifier(name, block)
                 rhs = ex.args[2]
                 if lhs == :toggles
                     toggles_expr = rhs
-                elseif lhs == :preset_map
-                    preset_map_expr = rhs
+                elseif lhs == :presets
+                    presets_expr = rhs
                 elseif lhs == :groups
                     groups_expr = rhs
                 end
@@ -46,7 +46,7 @@ macro define_verbosity_specifier(name, block)
     end
 
     toggles_expr !== nothing || throw(ArgumentError("toggles must be defined in block"))
-    preset_map_expr !== nothing || throw(ArgumentError("preset_map must be defined in block"))
+    presets_expr !== nothing || throw(ArgumentError("presets must be defined in block"))
     groups_expr !== nothing || throw(ArgumentError("groups must be defined in block"))
 
     # Parse toggles - should be a tuple of symbols
@@ -54,10 +54,10 @@ macro define_verbosity_specifier(name, block)
     # Extract the actual symbols from QuoteNode objects
     toggles = [t.value for t in toggles_expr.args]
 
-    # Parse preset_map - should be a NamedTuple
-    preset_map_expr.head == :tuple || throw(ArgumentError("preset_map must be a NamedTuple"))
+    # Parse presets - should be a NamedTuple
+    presets_expr.head == :tuple || throw(ArgumentError("presets must be a NamedTuple"))
     presets_dict = Dict()
-    for preset_def in preset_map_expr.args
+    for preset_def in presets_expr.args
         preset_def.head == :(=) || throw(ArgumentError("Each preset must be name = (...)"))
         preset_name = preset_def.args[1]
         preset_values = preset_def.args[2]
@@ -105,13 +105,6 @@ macro define_verbosity_specifier(name, block)
     struct_def = :(
         struct $name{$(type_params...)} <: AbstractVerbositySpecifier
             $(struct_fields...)
-        end
-    )
-
-    # Generate inner constructor
-    inner_constructor = :(
-        function $name($(toggles...))
-            return $name{$([:(typeof($t)) for t in toggles]...)}($(toggles...))
         end
     )
 
@@ -229,7 +222,6 @@ macro define_verbosity_specifier(name, block)
         $(custom_preset_defs...)
         $preset_map_const
         $struct_def
-        $inner_constructor
         $(preset_constructors...)
         $main_constructor
     end
