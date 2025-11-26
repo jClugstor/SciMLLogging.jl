@@ -5,6 +5,28 @@
         groups = (...)
     end
 
+Generates a parametric struct and constructors for a verbosity specifier.
+
+# Input Format
+
+**toggles:** Tuple of symbols defining the verbosity toggle names (e.g., `(:toggle1, :toggle2)`).
+
+**presets:** Named tuple mapping preset names to toggle configurations. Each preset maps toggle names to message levels or preset types.
+Must include at least `Standard`. Can define custom presets beyond the standard five (None, Minimal, Standard, Detailed, All).
+
+**groups:** Named tuple mapping group names to tuples of toggle symbols. Groups allow setting multiple toggles at once.
+
+# Generated Code
+
+**Struct:** Creates `name{T1, T2, ...} <: AbstractVerbositySpecifier` with fields for each toggle.
+
+**Constructors:**
+- `name()`: Default constructor using Standard preset
+- `name(preset::AbstractVerbosityPreset)`: Constructor from preset (e.g., `name(Minimal())`) for each preset in presets
+- `name(; preset=nothing, groups..., kwargs...)`: Keyword constructor with precedence: individual > group > preset
+
+**Custom Preset Types:** Generates struct definitions for non-standard presets (beyond None, Minimal, Standard, Detailed, All).
+
 # Example
 ```julia
 @verbosity_specifier MyVerbosity begin
