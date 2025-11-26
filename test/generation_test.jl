@@ -1,82 +1,80 @@
-toggles = (:toggle1, :toggle2, :toggle3, :toggle4, :toggle5,
-    :toggle6, :toggle7, :toggle8, :toggle9, :toggle10)
+@define_verbosity_specifier VerbSpec begin
+    toggles = (:toggle1, :toggle2, :toggle3, :toggle4, :toggle5,
+        :toggle6, :toggle7, :toggle8, :toggle9, :toggle10)
 
-preset_map = (
-    None = (
-        toggle1 = Silent(),
-        toggle2 = Silent(),
-        toggle3 = Silent(),
-        toggle4 = Silent(),
-        toggle5 = Silent(),
-        toggle6 = Silent(),
-        toggle7 = Silent(),
-        toggle8 = Silent(),
-        toggle9 = Silent(),
-        toggle10 = Silent()
-    ),
-    Minimal = (
-        toggle1 = WarnLevel(),
-        toggle2 = Silent(),
-        toggle3 = ErrorLevel(),
-        toggle4 = DebugLevel(),
-        toggle5 = InfoLevel(),
-        toggle6 = WarnLevel(),
-        toggle7 = Silent(),
-        toggle8 = InfoLevel(),
-        toggle9 = DebugLevel(),
-        toggle10 = ErrorLevel()
-    ),
-    Standard = (
-        toggle1 = InfoLevel(),
-        toggle2 = WarnLevel(),
-        toggle3 = DebugLevel(),
-        toggle4 = ErrorLevel(),
-        toggle5 = Silent(),
-        toggle6 = InfoLevel(),
-        toggle7 = DebugLevel(),
-        toggle8 = WarnLevel(),
-        toggle9 = Silent(),
-        toggle10 = ErrorLevel()
-    ),
-    Detailed = (
-        toggle1 = DebugLevel(),
-        toggle2 = InfoLevel(),
-        toggle3 = Silent(),
-        toggle4 = WarnLevel(),
-        toggle5 = ErrorLevel(),
-        toggle6 = DebugLevel(),
-        toggle7 = ErrorLevel(),
-        toggle8 = Silent(),
-        toggle9 = WarnLevel(),
-        toggle10 = InfoLevel()
-    ),
-    All = (
-        toggle1 = ErrorLevel(),
-        toggle2 = DebugLevel(),
-        toggle3 = InfoLevel(),
-        toggle4 = Silent(),
-        toggle5 = WarnLevel(),
-        toggle6 = ErrorLevel(),
-        toggle7 = InfoLevel(),
-        toggle8 = DebugLevel(),
-        toggle9 = WarnLevel(),
-        toggle10 = Silent()
+    preset_map = (
+        None = (
+            toggle1 = Silent(),
+            toggle2 = Silent(),
+            toggle3 = Silent(),
+            toggle4 = Silent(),
+            toggle5 = Silent(),
+            toggle6 = Silent(),
+            toggle7 = Silent(),
+            toggle8 = Silent(),
+            toggle9 = Silent(),
+            toggle10 = Silent()
+        ),
+        Minimal = (
+            toggle1 = WarnLevel(),
+            toggle2 = Silent(),
+            toggle3 = ErrorLevel(),
+            toggle4 = DebugLevel(),
+            toggle5 = InfoLevel(),
+            toggle6 = WarnLevel(),
+            toggle7 = Silent(),
+            toggle8 = InfoLevel(),
+            toggle9 = DebugLevel(),
+            toggle10 = ErrorLevel()
+        ),
+        Standard = (
+            toggle1 = InfoLevel(),
+            toggle2 = WarnLevel(),
+            toggle3 = DebugLevel(),
+            toggle4 = ErrorLevel(),
+            toggle5 = Silent(),
+            toggle6 = InfoLevel(),
+            toggle7 = DebugLevel(),
+            toggle8 = WarnLevel(),
+            toggle9 = Silent(),
+            toggle10 = ErrorLevel()
+        ),
+        Detailed = (
+            toggle1 = DebugLevel(),
+            toggle2 = InfoLevel(),
+            toggle3 = Silent(),
+            toggle4 = WarnLevel(),
+            toggle5 = ErrorLevel(),
+            toggle6 = DebugLevel(),
+            toggle7 = ErrorLevel(),
+            toggle8 = Silent(),
+            toggle9 = WarnLevel(),
+            toggle10 = InfoLevel()
+        ),
+        All = (
+            toggle1 = ErrorLevel(),
+            toggle2 = DebugLevel(),
+            toggle3 = InfoLevel(),
+            toggle4 = Silent(),
+            toggle5 = WarnLevel(),
+            toggle6 = ErrorLevel(),
+            toggle7 = InfoLevel(),
+            toggle8 = DebugLevel(),
+            toggle9 = WarnLevel(),
+            toggle10 = Silent()
+        )
     )
-)
 
-groups = (
-    numerical = (:toggle1, :toggle2, :toggle3),
-    performance = (:toggle4, :toggle5, :toggle6, :toggle7),
-    error_control = (:toggle8, :toggle9, :toggle10)
-)
-
-
-generated = generate_verbosity_specifier(:SciMLLogging.VerbSpec, toggles, preset_map, groups)
-eval_verbosity_specifier(generated)
+    groups = (
+        numerical = (:toggle1, :toggle2, :toggle3),
+        performance = (:toggle4, :toggle5, :toggle6, :toggle7),
+        error_control = (:toggle8, :toggle9, :toggle10)
+    )
+end
 
 using Test
 
-@testset "SciMLLogging.VerbSpec Constructor Tests" begin
+@testset "VerbSpec Constructor Tests" begin
     # Test 1: Default constructor (no arguments) - should use Standard preset
     @testset "Default constructor" begin
         v = SciMLLogging.VerbSpec()
@@ -89,34 +87,34 @@ using Test
     # Test 2: Preset constructors
     @testset "Preset constructors" begin
         # None preset
-        v_none = SciMLLogging.SciMLLogging.VerbSpec(None())
+        v_none = SciMLLogging.VerbSpec(None())
         @test all(getfield(v_none, f) == Silent() for f in fieldnames(typeof(v_none)))
 
         # Minimal preset
-        v_min = SciMLLogging.SciMLLogging.VerbSpec(Minimal())
+        v_min = SciMLLogging.VerbSpec(Minimal())
         @test v_min.toggle1 == WarnLevel()
         @test v_min.toggle2 == Silent()
         @test v_min.toggle3 == ErrorLevel()
 
         # Standard preset
-        v_std = SciMLLogging.SciMLLogging.VerbSpec(Standard())
+        v_std = SciMLLogging.VerbSpec(Standard())
         @test v_std.toggle1 == InfoLevel()
         @test v_std.toggle2 == WarnLevel()
 
         # Detailed preset
-        v_det = SciMLLogging.SciMLLogging.VerbSpec(Detailed())
+        v_det = SciMLLogging.VerbSpec(Detailed())
         @test v_det.toggle1 == DebugLevel()
         @test v_det.toggle2 == InfoLevel()
 
         # All preset
-        v_all = SciMLLogging.SciMLLogging.VerbSpec(All())
+        v_all = SciMLLogging.VerbSpec(All())
         @test v_all.toggle1 == ErrorLevel()
         @test v_all.toggle2 == DebugLevel()
     end
 
     # Test 3: Keyword constructor with preset parameter
     @testset "Keyword constructor with preset" begin
-        v = SciMLLogging.SciMLLogging.VerbSpec(preset=Minimal())
+        v = SciMLLogging.VerbSpec(preset=Minimal())
         @test v.toggle1 == WarnLevel()
         @test v.toggle2 == Silent()
     end
@@ -228,130 +226,128 @@ end
 
 
 # LinearVerbosity configuration
-linear_toggles = (
-    :default_lu_fallback,
-    :no_right_preconditioning,
-    :using_IterativeSolvers,
-    :IterativeSolvers_iterations,
-    :KrylovKit_verbosity,
-    :KrylovJL_verbosity,
-    :HYPRE_verbosity,
-    :pardiso_verbosity,
-    :blas_errors,
-    :blas_invalid_args,
-    :blas_info,
-    :blas_success,
-    :condition_number,
-    :convergence_failure,
-    :solver_failure,
-    :max_iters
-)
-
-linear_preset_map = (
-    None = (
-        default_lu_fallback = Silent(),
-        no_right_preconditioning = Silent(),
-        using_IterativeSolvers = Silent(),
-        IterativeSolvers_iterations = Silent(),
-        KrylovKit_verbosity = Silent(),
-        KrylovJL_verbosity = Silent(),
-        HYPRE_verbosity = Silent(),
-        pardiso_verbosity = Silent(),
-        blas_errors = Silent(),
-        blas_invalid_args = Silent(),
-        blas_info = Silent(),
-        blas_success = Silent(),
-        condition_number = Silent(),
-        convergence_failure = Silent(),
-        solver_failure = Silent(),
-        max_iters = Silent()
-    ),
-    Minimal = (
-        default_lu_fallback = Silent(),
-        no_right_preconditioning = Silent(),
-        using_IterativeSolvers = Silent(),
-        IterativeSolvers_iterations = Silent(),
-        KrylovKit_verbosity = Silent(),
-        KrylovJL_verbosity = Silent(),
-        HYPRE_verbosity = Silent(),
-        pardiso_verbosity = Silent(),
-        blas_errors = WarnLevel(),
-        blas_invalid_args = WarnLevel(),
-        blas_info = Silent(),
-        blas_success = Silent(),
-        condition_number = Silent(),
-        convergence_failure = Silent(),
-        solver_failure = Silent(),
-        max_iters = Silent()
-    ),
-    Standard = (
-        default_lu_fallback = Silent(),
-        no_right_preconditioning = Silent(),
-        using_IterativeSolvers = Silent(),
-        IterativeSolvers_iterations = Silent(),
-        KrylovKit_verbosity = CustomLevel(1),
-        KrylovJL_verbosity = Silent(),
-        HYPRE_verbosity = InfoLevel(),
-        pardiso_verbosity = Silent(),
-        blas_errors = WarnLevel(),
-        blas_invalid_args = WarnLevel(),
-        blas_info = Silent(),
-        blas_success = Silent(),
-        condition_number = Silent(),
-        convergence_failure = WarnLevel(),
-        solver_failure = WarnLevel(),
-        max_iters = WarnLevel()
-    ),
-    Detailed = (
-        default_lu_fallback = WarnLevel(),
-        no_right_preconditioning = InfoLevel(),
-        using_IterativeSolvers = InfoLevel(),
-        IterativeSolvers_iterations = Silent(),
-        KrylovKit_verbosity = CustomLevel(2),
-        KrylovJL_verbosity = CustomLevel(1),
-        HYPRE_verbosity = InfoLevel(),
-        pardiso_verbosity = CustomLevel(1),
-        blas_errors = WarnLevel(),
-        blas_invalid_args = WarnLevel(),
-        blas_info = InfoLevel(),
-        blas_success = InfoLevel(),
-        condition_number = Silent(),
-        convergence_failure = WarnLevel(),
-        solver_failure = WarnLevel(),
-        max_iters = WarnLevel()
-    ),
-    All = (
-        default_lu_fallback = WarnLevel(),
-        no_right_preconditioning = InfoLevel(),
-        using_IterativeSolvers = InfoLevel(),
-        IterativeSolvers_iterations = InfoLevel(),
-        KrylovKit_verbosity = CustomLevel(3),
-        KrylovJL_verbosity = CustomLevel(1),
-        HYPRE_verbosity = InfoLevel(),
-        pardiso_verbosity = CustomLevel(1),
-        blas_errors = WarnLevel(),
-        blas_invalid_args = WarnLevel(),
-        blas_info = InfoLevel(),
-        blas_success = InfoLevel(),
-        condition_number = InfoLevel(),
-        convergence_failure = WarnLevel(),
-        solver_failure = WarnLevel(),
-        max_iters = WarnLevel()
+@define_verbosity_specifier LinearVerbosity begin
+    toggles = (
+        :default_lu_fallback,
+        :no_right_preconditioning,
+        :using_IterativeSolvers,
+        :IterativeSolvers_iterations,
+        :KrylovKit_verbosity,
+        :KrylovJL_verbosity,
+        :HYPRE_verbosity,
+        :pardiso_verbosity,
+        :blas_errors,
+        :blas_invalid_args,
+        :blas_info,
+        :blas_success,
+        :condition_number,
+        :convergence_failure,
+        :solver_failure,
+        :max_iters
     )
-)
 
-linear_groups = (
-    error_control = (:default_lu_fallback, :blas_errors, :blas_invalid_args),
-    performance = (:no_right_preconditioning,),
-    numerical = (:using_IterativeSolvers, :IterativeSolvers_iterations,
-                 :KrylovKit_verbosity, :KrylovJL_verbosity, :HYPRE_verbosity,
-                 :pardiso_verbosity, :blas_info, :blas_success, :condition_number,
-                 :convergence_failure, :solver_failure, :max_iters)
-)
+    preset_map = (
+        None = (
+            default_lu_fallback = Silent(),
+            no_right_preconditioning = Silent(),
+            using_IterativeSolvers = Silent(),
+            IterativeSolvers_iterations = Silent(),
+            KrylovKit_verbosity = Silent(),
+            KrylovJL_verbosity = Silent(),
+            HYPRE_verbosity = Silent(),
+            pardiso_verbosity = Silent(),
+            blas_errors = Silent(),
+            blas_invalid_args = Silent(),
+            blas_info = Silent(),
+            blas_success = Silent(),
+            condition_number = Silent(),
+            convergence_failure = Silent(),
+            solver_failure = Silent(),
+            max_iters = Silent()
+        ),
+        Minimal = (
+            default_lu_fallback = Silent(),
+            no_right_preconditioning = Silent(),
+            using_IterativeSolvers = Silent(),
+            IterativeSolvers_iterations = Silent(),
+            KrylovKit_verbosity = Silent(),
+            KrylovJL_verbosity = Silent(),
+            HYPRE_verbosity = Silent(),
+            pardiso_verbosity = Silent(),
+            blas_errors = WarnLevel(),
+            blas_invalid_args = WarnLevel(),
+            blas_info = Silent(),
+            blas_success = Silent(),
+            condition_number = Silent(),
+            convergence_failure = Silent(),
+            solver_failure = Silent(),
+            max_iters = Silent()
+        ),
+        Standard = (
+            default_lu_fallback = Silent(),
+            no_right_preconditioning = Silent(),
+            using_IterativeSolvers = Silent(),
+            IterativeSolvers_iterations = Silent(),
+            KrylovKit_verbosity = CustomLevel(1),
+            KrylovJL_verbosity = Silent(),
+            HYPRE_verbosity = InfoLevel(),
+            pardiso_verbosity = Silent(),
+            blas_errors = WarnLevel(),
+            blas_invalid_args = WarnLevel(),
+            blas_info = Silent(),
+            blas_success = Silent(),
+            condition_number = Silent(),
+            convergence_failure = WarnLevel(),
+            solver_failure = WarnLevel(),
+            max_iters = WarnLevel()
+        ),
+        Detailed = (
+            default_lu_fallback = WarnLevel(),
+            no_right_preconditioning = InfoLevel(),
+            using_IterativeSolvers = InfoLevel(),
+            IterativeSolvers_iterations = Silent(),
+            KrylovKit_verbosity = CustomLevel(2),
+            KrylovJL_verbosity = CustomLevel(1),
+            HYPRE_verbosity = InfoLevel(),
+            pardiso_verbosity = CustomLevel(1),
+            blas_errors = WarnLevel(),
+            blas_invalid_args = WarnLevel(),
+            blas_info = InfoLevel(),
+            blas_success = InfoLevel(),
+            condition_number = Silent(),
+            convergence_failure = WarnLevel(),
+            solver_failure = WarnLevel(),
+            max_iters = WarnLevel()
+        ),
+        All = (
+            default_lu_fallback = WarnLevel(),
+            no_right_preconditioning = InfoLevel(),
+            using_IterativeSolvers = InfoLevel(),
+            IterativeSolvers_iterations = InfoLevel(),
+            KrylovKit_verbosity = CustomLevel(3),
+            KrylovJL_verbosity = CustomLevel(1),
+            HYPRE_verbosity = InfoLevel(),
+            pardiso_verbosity = CustomLevel(1),
+            blas_errors = WarnLevel(),
+            blas_invalid_args = WarnLevel(),
+            blas_info = InfoLevel(),
+            blas_success = InfoLevel(),
+            condition_number = InfoLevel(),
+            convergence_failure = WarnLevel(),
+            solver_failure = WarnLevel(),
+            max_iters = WarnLevel()
+        )
+    )
 
-# Generate LinearVerbosity
-linear_generated = generate_verbosity_specifier(:LinearVerbosity, linear_toggles, linear_preset_map, linear_groups)
-eval_verbosity_specifier(linear_generated)
+    groups = (
+        error_control = (:default_lu_fallback, :blas_errors, :blas_invalid_args),
+        performance = (:no_right_preconditioning,),
+        numerical = (:using_IterativeSolvers, :IterativeSolvers_iterations,
+                     :KrylovKit_verbosity, :KrylovJL_verbosity, :HYPRE_verbosity,
+                     :pardiso_verbosity, :blas_info, :blas_success, :condition_number,
+                     :convergence_failure, :solver_failure, :max_iters)
+    )
+end
 
 # Test LinearVerbosity
 @testset "LinearVerbosity Tests" begin
