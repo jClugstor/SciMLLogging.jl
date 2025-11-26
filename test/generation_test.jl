@@ -1,8 +1,15 @@
-@define_verbosity_specifier VerbSpec begin
+using SciMLLogging
+using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage,
+                    AbstractVerbosityPreset, AbstractMessageLevel, WarnLevel, InfoLevel,
+                    ErrorLevel, Silent, None, All, Minimal, @verbosity_specifier
+using Logging
+using Test
+
+SciMLLogging.@verbosity_specifier VerbSpec begin
     toggles = (:toggle1, :toggle2, :toggle3, :toggle4, :toggle5,
         :toggle6, :toggle7, :toggle8, :toggle9, :toggle10)
 
-    preset_map = (
+    presets = (
         None = (
             toggle1 = Silent(),
             toggle2 = Silent(),
@@ -72,12 +79,10 @@
     )
 end
 
-using Test
-
 @testset "VerbSpec Constructor Tests" begin
     # Test 1: Default constructor (no arguments) - should use Standard preset
     @testset "Default constructor" begin
-        v = SciMLLogging.VerbSpec()
+        v = VerbSpec()
         @test v.toggle1 == InfoLevel()
         @test v.toggle2 == WarnLevel()
         @test v.toggle3 == DebugLevel()
@@ -87,34 +92,34 @@ using Test
     # Test 2: Preset constructors
     @testset "Preset constructors" begin
         # None preset
-        v_none = SciMLLogging.VerbSpec(None())
+        v_none = VerbSpec(None())
         @test all(getfield(v_none, f) == Silent() for f in fieldnames(typeof(v_none)))
 
         # Minimal preset
-        v_min = SciMLLogging.VerbSpec(Minimal())
+        v_min = VerbSpec(Minimal())
         @test v_min.toggle1 == WarnLevel()
         @test v_min.toggle2 == Silent()
         @test v_min.toggle3 == ErrorLevel()
 
         # Standard preset
-        v_std = SciMLLogging.VerbSpec(Standard())
+        v_std = VerbSpec(Standard())
         @test v_std.toggle1 == InfoLevel()
         @test v_std.toggle2 == WarnLevel()
 
         # Detailed preset
-        v_det = SciMLLogging.VerbSpec(Detailed())
+        v_det = VerbSpec(Detailed())
         @test v_det.toggle1 == DebugLevel()
         @test v_det.toggle2 == InfoLevel()
 
         # All preset
-        v_all = SciMLLogging.VerbSpec(All())
+        v_all = VerbSpec(All())
         @test v_all.toggle1 == ErrorLevel()
         @test v_all.toggle2 == DebugLevel()
     end
 
     # Test 3: Keyword constructor with preset parameter
     @testset "Keyword constructor with preset" begin
-        v = SciMLLogging.VerbSpec(preset=Minimal())
+        v = VerbSpec(preset=Minimal())
         @test v.toggle1 == WarnLevel()
         @test v.toggle2 == Silent()
     end
@@ -122,21 +127,21 @@ using Test
     # Test 4: Group parameters
     @testset "Group parameters" begin
         # Set all numerical toggles to ErrorLevel
-        v = SciMLLogging.VerbSpec(numerical=ErrorLevel())
+        v = VerbSpec(numerical=ErrorLevel())
         @test v.toggle1 == ErrorLevel()  # numerical group
         @test v.toggle2 == ErrorLevel()  # numerical group
         @test v.toggle3 == ErrorLevel()  # numerical group
         @test v.toggle4 == ErrorLevel()  # performance group (from Standard preset)
 
         # Set all performance toggles
-        v2 = SciMLLogging.VerbSpec(performance=InfoLevel())
+        v2 = VerbSpec(performance=InfoLevel())
         @test v2.toggle4 == InfoLevel()  # performance group
         @test v2.toggle5 == InfoLevel()  # performance group
         @test v2.toggle6 == InfoLevel()  # performance group
         @test v2.toggle7 == InfoLevel()  # performance group
 
         # Set all error_control toggles
-        v3 = SciMLLogging.VerbSpec(error_control=DebugLevel())
+        v3 = VerbSpec(error_control=DebugLevel())
         @test v3.toggle8 == DebugLevel()  # error_control group
         @test v3.toggle9 == DebugLevel()  # error_control group
         @test v3.toggle10 == DebugLevel()  # error_control group
@@ -144,12 +149,12 @@ using Test
 
     # Test 5: Individual toggle parameters
     @testset "Individual toggle parameters" begin
-        v = SciMLLogging.VerbSpec(toggle1=ErrorLevel())
+        v = VerbSpec(toggle1=ErrorLevel())
         @test v.toggle1 == ErrorLevel()
         @test v.toggle2 == WarnLevel()  # from Standard preset
 
         # Multiple individual toggles
-        v2 = SciMLLogging.VerbSpec(toggle1=ErrorLevel(), toggle5=WarnLevel())
+        v2 = VerbSpec(toggle1=ErrorLevel(), toggle5=WarnLevel())
         @test v2.toggle1 == ErrorLevel()
         @test v2.toggle5 == WarnLevel()
     end
@@ -157,18 +162,18 @@ using Test
     # Test 6: Precedence: individual > group > preset
     @testset "Precedence tests" begin
         # Individual overrides group
-        v = SciMLLogging.VerbSpec(numerical=WarnLevel(), toggle1=ErrorLevel())
+        v = VerbSpec(numerical=WarnLevel(), toggle1=ErrorLevel())
         @test v.toggle1 == ErrorLevel()  # individual wins
         @test v.toggle2 == WarnLevel()   # from group
         @test v.toggle3 == WarnLevel()   # from group
 
         # Group overrides preset
-        v2 = SciMLLogging.VerbSpec(preset=None(), numerical=InfoLevel())
+        v2 = VerbSpec(preset=None(), numerical=InfoLevel())
         @test v2.toggle1 == InfoLevel()  # from group
         @test v2.toggle4 == Silent()     # from preset (not in numerical group)
 
         # All three levels
-        v3 = SciMLLogging.VerbSpec(preset=None(), performance=WarnLevel(), toggle4=ErrorLevel())
+        v3 = VerbSpec(preset=None(), performance=WarnLevel(), toggle4=ErrorLevel())
         @test v3.toggle4 == ErrorLevel()  # individual wins
         @test v3.toggle5 == WarnLevel()   # from group
         @test v3.toggle1 == Silent()      # from preset
@@ -176,7 +181,7 @@ using Test
 
     # Test 7: Combining preset with groups
     @testset "Preset with groups" begin
-        v = SciMLLogging.VerbSpec(preset=Minimal(), numerical=DebugLevel())
+        v = VerbSpec(preset=Minimal(), numerical=DebugLevel())
         @test v.toggle1 == DebugLevel()  # from group
         @test v.toggle2 == DebugLevel()  # from group
         @test v.toggle3 == DebugLevel()  # from group
@@ -185,7 +190,7 @@ using Test
 
     # Test 8: All three: preset, groups, and individual toggles
     @testset "Preset + groups + individual toggles" begin
-        v = SciMLLogging.VerbSpec(
+        v = VerbSpec(
             preset=Detailed(),
             numerical=ErrorLevel(),
             performance=WarnLevel(),
@@ -202,31 +207,31 @@ using Test
 
     # Test 9: Type stability - ensure parametric types work
     @testset "Type stability" begin
-        v = SciMLLogging.VerbSpec()
-        @test typeof(v) <: SciMLLogging.VerbSpec
+        v = VerbSpec()
+        @test typeof(v) <: VerbSpec
         @test isconcretetype(typeof(v))
     end
 
     # Test 10: Error handling
     @testset "Error handling" begin
         # Invalid group argument type
-        @test_throws ArgumentError SciMLLogging.VerbSpec(numerical="invalid")
+        @test_throws ArgumentError VerbSpec(numerical="invalid")
 
         # Invalid individual toggle type
-        @test_throws ArgumentError SciMLLogging.VerbSpec(toggle1="invalid")
+        @test_throws ArgumentError VerbSpec(toggle1="invalid")
 
         # Unknown toggle name
-        @test_throws ArgumentError SciMLLogging.VerbSpec(unknown_toggle=ErrorLevel())
+        @test_throws ArgumentError VerbSpec(unknown_toggle=ErrorLevel())
 
         # Invalid preset type
-        @test_throws ArgumentError SciMLLogging.VerbSpec(preset="invalid")
+        @test_throws ArgumentError VerbSpec(preset="invalid")
     end
 end
 
 
 
 # LinearVerbosity configuration
-@define_verbosity_specifier LinearVerbosity begin
+@verbosity_specifier LinearVerbosity begin
     toggles = (
         :default_lu_fallback,
         :no_right_preconditioning,
@@ -246,7 +251,7 @@ end
         :max_iters
     )
 
-    preset_map = (
+    presets = (
         None = (
             default_lu_fallback = Silent(),
             no_right_preconditioning = Silent(),
@@ -372,6 +377,152 @@ end
         @test v.default_lu_fallback == ErrorLevel()
         @test v.blas_errors == ErrorLevel()
         @test v.blas_invalid_args == ErrorLevel()
+    end
+end
+
+# Test with preset types as toggle values (useful for verb specs that hold other verb specs, e.g. NonlinearVerbosity)
+@verbosity_specifier HierarchicalVerbosity begin
+    toggles = (:component_a, :component_b, :component_c)
+
+    presets = (
+        None = (
+            component_a = Silent(),
+            component_b = Silent(),
+            component_c = Silent()
+        ),
+        Minimal = (
+            component_a = WarnLevel(),
+            component_b = Minimal(),  # Reference to another preset
+            component_c = InfoLevel()
+        ),
+        Standard = (
+            component_a = InfoLevel(),
+            component_b = Standard(),  # Reference to another preset
+            component_c = WarnLevel()
+        ),
+        Detailed = (
+            component_a = DebugLevel(),
+            component_b = Detailed(),  # Reference to another preset
+            component_c = InfoLevel()
+        ),
+        All = (
+            component_a = ErrorLevel(),
+            component_b = All(),  # Reference to another preset
+            component_c = DebugLevel()
+        )
+    )
+
+    groups = (
+        main = (:component_a,),
+        auxiliary = (:component_b, :component_c)
+    )
+end
+
+@testset "HierarchicalVerbosity with Preset References" begin
+    @testset "Preset as toggle value" begin
+        v = HierarchicalVerbosity(preset=Minimal())
+        @test v.component_a == WarnLevel()
+        @test v.component_b == Minimal()  # Should be the preset type, not expanded
+        @test v.component_c == InfoLevel()
+
+        v2 = HierarchicalVerbosity(preset=Standard())
+        @test v2.component_a == InfoLevel()
+        @test v2.component_b == Standard()
+        @test v2.component_c == WarnLevel()
+    end
+
+    @testset "Override preset-typed toggle" begin
+        # Override a preset-typed toggle with a message level
+        v = HierarchicalVerbosity(preset=Standard(), component_b=ErrorLevel())
+        @test v.component_a == InfoLevel()
+        @test v.component_b == ErrorLevel()  # Overridden
+        @test v.component_c == WarnLevel()
+    end
+end
+
+# Test with custom presets
+@verbosity_specifier CustomPresetVerbosity begin
+    toggles = (:solver, :preconditioner, :convergence)
+
+    presets = (
+        None = (
+            solver = Silent(),
+            preconditioner = Silent(),
+            convergence = Silent()
+        ),
+        Minimal = (
+            solver = WarnLevel(),
+            preconditioner = Silent(),
+            convergence = WarnLevel()
+        ),
+        Standard = (
+            solver = InfoLevel(),
+            preconditioner = InfoLevel(),
+            convergence = WarnLevel()
+        ),
+        Detailed = (
+            solver = DebugLevel(),
+            preconditioner = InfoLevel(),
+            convergence = InfoLevel()
+        ),
+        All = (
+            solver = DebugLevel(),
+            preconditioner = DebugLevel(),
+            convergence = DebugLevel()
+        ),
+        # Custom presets
+        QuietSolver = (
+            solver = Silent(),
+            preconditioner = InfoLevel(),
+            convergence = WarnLevel()
+        ),
+        VerboseSolver = (
+            solver = DebugLevel(),
+            preconditioner = Silent(),
+            convergence = ErrorLevel()
+        )
+    )
+
+    groups = (
+        core = (:solver, :preconditioner),
+        diagnostics = (:convergence,)
+    )
+end
+
+@testset "CustomPresetVerbosity with Custom Presets" begin
+    @testset "Standard presets work" begin
+        v = CustomPresetVerbosity(preset=Standard())
+        @test v.solver == InfoLevel()
+        @test v.preconditioner == InfoLevel()
+        @test v.convergence == WarnLevel()
+    end
+
+    @testset "Custom preset QuietSolver" begin
+        v = CustomPresetVerbosity(preset=QuietSolver())
+        @test v.solver == Silent()
+        @test v.preconditioner == InfoLevel()
+        @test v.convergence == WarnLevel()
+    end
+
+    @testset "Custom preset VerboseSolver" begin
+        v = CustomPresetVerbosity(preset=VerboseSolver())
+        @test v.solver == DebugLevel()
+        @test v.preconditioner == Silent()
+        @test v.convergence == ErrorLevel()
+    end
+
+    @testset "Override custom preset with group" begin
+        v = CustomPresetVerbosity(preset=QuietSolver(), core=ErrorLevel())
+        @test v.solver == ErrorLevel()  # Overridden by group
+        @test v.preconditioner == ErrorLevel()  # Overridden by group
+        @test v.convergence == WarnLevel()  # From preset
+    end
+
+    @testset "Override custom preset with individual toggle" begin
+        v = CustomPresetVerbosity(preset=VerboseSolver(), solver=InfoLevel())
+        @test v.solver == InfoLevel()  # Overridden
+        @test v.preconditioner == Silent()  # From preset
+        @test v.convergence == ErrorLevel()  # From preset
     end
 end
 
