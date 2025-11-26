@@ -29,7 +29,6 @@ macro define_verbosity_specifier(name, block)
     local preset_map_expr = nothing
     local groups_expr = nothing
 
-    # The block should be a :block expression with :line and assignment expressions
     if block.head == :block
         for ex in block.args
             if ex isa Expr && ex.head == :(=)
@@ -116,7 +115,6 @@ macro define_verbosity_specifier(name, block)
         end
     )
 
-    Main.@infiltrate
     # Generate preset constructors
     preset_constructors = []
     for preset_name in preset_names
@@ -145,9 +143,6 @@ macro define_verbosity_specifier(name, block)
     # Get Standard preset config for fast path
     standard_config = presets_dict[:Standard]
     fast_path_values = [standard_config[t] for t in toggles]
-
-    # Build the runtime helper function
-    runtime_helper_name = Symbol("_build_$(name)_runtime")
 
     # Build validation for groups
     group_validations = []
@@ -181,29 +176,40 @@ macro define_verbosity_specifier(name, block)
     for pname in preset_names
         toggle_values = [presets_dict[pname][t] for t in toggles]
         # Use tuple of symbols for NamedTuple type parameter
-        push!(preset_configs, :(NamedTuple{$(Tuple(toggles))}($(Tuple(toggle_values)))))
+        push!(preset_configs, :(NamedTuple{$(Tuple(toggles))}(($(toggle_values...),))))
     end
 
     # Use tuple of symbols for preset names
-    preset_map_const = :(const $(Symbol("_preset_map_", name)) = NamedTuple{$(Tuple(preset_names))}($(Tuple(preset_configs))))
+    preset_map_const = :(const $(Symbol("_preset_map_", name)) = NamedTuple{$(Tuple(preset_names))}(($(preset_configs...),)))
 
-    runtime_helper = quote
-        function $(runtime_helper_name)($(group_names...), preset, kwargs)
+    # Build main constructor
+    kwarg_params = [Expr(:kw, :preset, :nothing); [Expr(:kw, g, :nothing) for g in group_names]]
+    runtime_condition = foldr((a, b) -> :($a && $b), [:($(g) === nothing) for g in group_names]; init = :(preset === nothing && isempty(kwargs)))
+
+    main_constructor = quote
+        function $name(; $(kwarg_params...), kwargs...)
+            kwargs = NamedTuple(kwargs)
+
+            # Fast path: all defaults
+            if $runtime_condition
+                return $name($(fast_path_values...))
+            end
+
             # Validate groups
             $(group_validations...)
 
             # Validate preset
             if preset !== nothing && !(preset isa AbstractVerbosityPreset)
-                throw(ArgumentError("preset must be a SciMLLogging.AbstractVerbosityPreset, got \$(typeof(preset))"))
+                throw(ArgumentError("preset must be a SciMLLogging.AbstractVerbosityPreset, got $(typeof(preset))"))
             end
 
             # Validate kwargs
             for (key, value) in pairs(kwargs)
                 if !(key in $(Tuple(toggles)))
-                    throw(ArgumentError("Unknown verbosity option: \$key. Valid options are: $($(Tuple(toggles)))"))
+                    throw(ArgumentError("Unknown verbosity option: $key. Valid options are: $($(Tuple(toggles)))"))
                 end
                 if !(value isa AbstractMessageLevel)
-                    throw(ArgumentError("\$key must be a SciMLLogging.AbstractMessageLevel, got \$(typeof(value))"))
+                    throw(ArgumentError("$key must be a SciMLLogging.AbstractMessageLevel, got $(typeof(value))"))
                 end
             end
 
@@ -218,45 +224,6 @@ macro define_verbosity_specifier(name, block)
         end
     end
 
-    # Build wrapper function
-    wrapper_name = Symbol("_build_$(name)")
-    fast_path_expr = :($name($(fast_path_values...)))
-    slow_path_expr = :($runtime_helper_name($(group_names...), preset, kwargs))
-
-    # Build conditions
-    compile_time_condition = foldr((a, b) -> :($a && $b), [:($(g) === Nothing) for g in group_names]; init = :(preset === Nothing && kwargs <: NamedTuple{()}))
-    runtime_condition = foldr((a, b) -> :($a && $b), [:($(g) === nothing) for g in group_names]; init = :(preset === nothing && isempty(kwargs)))
-
-    quoted_fast = QuoteNode(fast_path_expr)
-    quoted_slow = QuoteNode(slow_path_expr)
-
-    wrapper_function = quote
-        function $(wrapper_name)($(group_names...), preset, kwargs)
-            if @generated
-                if $compile_time_condition
-                    return $quoted_fast
-                else
-                    return $quoted_slow
-                end
-            else
-                if $runtime_condition
-                    return $name($(fast_path_values...))
-                else
-                    return $runtime_helper_name($(group_names...), preset, kwargs)
-                end
-            end
-        end
-    end
-
-    # Build main constructor
-    kwarg_params = [Expr(:kw, :preset, :nothing); [Expr(:kw, g, :nothing) for g in group_names]]
-
-    main_constructor = quote
-        function $name(; $(kwarg_params...), kwargs...)
-            $(wrapper_name)($(group_names...), preset, NamedTuple(kwargs))
-        end
-    end
-
     # Assemble everything
     result = quote
         $(custom_preset_defs...)
@@ -264,8 +231,6 @@ macro define_verbosity_specifier(name, block)
         $struct_def
         $inner_constructor
         $(preset_constructors...)
-        $runtime_helper
-        $wrapper_function
         $main_constructor
     end
 
