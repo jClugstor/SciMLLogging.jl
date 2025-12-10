@@ -223,8 +223,8 @@ macro verbosity_specifier(name, block)
                 if !(key in $(Tuple(toggles)))
                     throw(ArgumentError("Unknown verbosity option: $key. Valid options are: $($(Tuple(toggles)))"))
                 end
-                if !(value isa AbstractMessageLevel || value isa AbstractVerbosityPreset)
-                    throw(ArgumentError("$key must be a SciMLLogging.AbstractMessageLevel or AbstractVerbosityPreset, got $(typeof(value))"))
+                if !(value isa AbstractMessageLevel || value isa AbstractVerbosityPreset || value isa AbstractVerbositySpecifier)
+                    throw(ArgumentError("$key must be a SciMLLogging.AbstractMessageLevel, AbstractVerbosityPreset, or AbstractVerbositySpecifier, got $(typeof(value))"))
                 end
             end
 
