@@ -162,9 +162,11 @@ macro verbosity_specifier(name, block)
     # Build validation for groups
     group_validations = []
     for group_name in group_names
+        lazy_str = Expr(:macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
+                       "\$($(QuoteNode(group_name))) must be a SciMLLogging.AbstractMessageLevel, got \$(typeof($(group_name)))")
         push!(group_validations, quote
             if $(group_name) !== nothing && !($(group_name) isa AbstractMessageLevel)
-                throw(ArgumentError("$($(QuoteNode(group_name))) must be a SciMLLogging.AbstractMessageLevel, got $(typeof($(group_name)))"))
+                throw(ArgumentError($lazy_str))
             end
         end)
     end
@@ -201,6 +203,14 @@ macro verbosity_specifier(name, block)
     kwarg_params = [Expr(:kw, :preset, :nothing); [Expr(:kw, g, :nothing) for g in group_names]]
     runtime_condition = foldr((a, b) -> :($a && $b), [:($(g) === nothing) for g in group_names]; init = :(preset === nothing && isempty(kwargs)))
 
+    # Build lazy string expressions
+    preset_error_str = Expr(:macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
+                           "preset must be a SciMLLogging.AbstractVerbosityPreset, got \$(typeof(preset))")
+    unknown_option_str = Expr(:macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
+                             "Unknown verbosity option: \$key. Valid options are: $(Tuple(toggles))")
+    invalid_type_str = Expr(:macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
+                           "\$key must be a SciMLLogging.AbstractMessageLevel, AbstractVerbosityPreset, or AbstractVerbositySpecifier, got \$(typeof(value))")
+
     main_constructor = quote
         function $name(; $(kwarg_params...), kwargs...)
             kwargs = NamedTuple(kwargs)
@@ -215,16 +225,16 @@ macro verbosity_specifier(name, block)
 
             # Validate preset
             if preset !== nothing && !(preset isa AbstractVerbosityPreset)
-                throw(ArgumentError("preset must be a SciMLLogging.AbstractVerbosityPreset, got $(typeof(preset))"))
+                throw(ArgumentError($preset_error_str))
             end
 
             # Validate kwargs
             for (key, value) in pairs(kwargs)
                 if !(key in $(Tuple(toggles)))
-                    throw(ArgumentError("Unknown verbosity option: $key. Valid options are: $($(Tuple(toggles)))"))
+                    throw(ArgumentError($unknown_option_str))
                 end
-                if !(value isa AbstractMessageLevel)
-                    throw(ArgumentError("$key must be a SciMLLogging.AbstractMessageLevel, got $(typeof(value))"))
+                if !(value isa AbstractMessageLevel || value isa AbstractVerbosityPreset || value isa AbstractVerbositySpecifier)
+                    throw(ArgumentError($invalid_type_str))
                 end
             end
 

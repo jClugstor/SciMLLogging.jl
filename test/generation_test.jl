@@ -438,6 +438,14 @@ end
         @test v.component_b == ErrorLevel()  # Overridden
         @test v.component_c == WarnLevel()
     end
+
+    @testset "Set toggle to preset via kwarg" begin
+        # Set a toggle to a preset type using kwargs
+        v = HierarchicalVerbosity(component_a=InfoLevel(), component_b=Detailed())
+        @test v.component_a == InfoLevel()
+        @test v.component_b == Detailed()  # Set to preset type via kwarg
+        @test v.component_c == WarnLevel()  # From Standard preset (default)
+    end
 end
 
 # Test with custom presets
