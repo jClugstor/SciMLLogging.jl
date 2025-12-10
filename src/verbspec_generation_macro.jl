@@ -164,7 +164,7 @@ macro verbosity_specifier(name, block)
     for group_name in group_names
         push!(group_validations, quote
             if $(group_name) !== nothing && !($(group_name) isa AbstractMessageLevel)
-                throw(ArgumentError("$($(QuoteNode(group_name))) must be a SciMLLogging.AbstractMessageLevel, got $(typeof($(group_name)))"))
+                throw(ArgumentError(lazy"$($(QuoteNode(group_name))) must be a SciMLLogging.AbstractMessageLevel, got $(typeof($(group_name)))"))
             end
         end)
     end
@@ -215,16 +215,16 @@ macro verbosity_specifier(name, block)
 
             # Validate preset
             if preset !== nothing && !(preset isa AbstractVerbosityPreset)
-                throw(ArgumentError("preset must be a SciMLLogging.AbstractVerbosityPreset, got $(typeof(preset))"))
+                throw(ArgumentError(lazy"preset must be a SciMLLogging.AbstractVerbosityPreset, got $(typeof(preset))"))
             end
 
             # Validate kwargs
             for (key, value) in pairs(kwargs)
                 if !(key in $(Tuple(toggles)))
-                    throw(ArgumentError("Unknown verbosity option: $key. Valid options are: $($(Tuple(toggles)))"))
+                    throw(ArgumentError(lazy"Unknown verbosity option: $key. Valid options are: $($(Tuple(toggles)))"))
                 end
                 if !(value isa AbstractMessageLevel || value isa AbstractVerbosityPreset || value isa AbstractVerbositySpecifier)
-                    throw(ArgumentError("$key must be a SciMLLogging.AbstractMessageLevel, AbstractVerbosityPreset, or AbstractVerbositySpecifier, got $(typeof(value))"))
+                    throw(ArgumentError(lazy"$key must be a SciMLLogging.AbstractMessageLevel, AbstractVerbosityPreset, or AbstractVerbositySpecifier, got $(typeof(value))"))
                 end
             end
 
