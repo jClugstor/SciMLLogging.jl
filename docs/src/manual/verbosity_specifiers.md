@@ -37,10 +37,12 @@ using ConcreteStructs: @concrete
 end
 ```
 
-**Note:** The `@concrete` macro from ConcreteStructs.jl is recommended for performance reasons:
+**Note:** It is recommended that the verbosity specifier is concretely typed for several performance reasons:
 
 - **Type stability**: Eliminates type instabilities that can hurt performance
 - **Compile-time optimization**: Allows the compiler to generate more efficient code
+
+The `@concrete` macro from ConcreteStructs.jl is a convenient way to automate that. 
 
 ## Configuring Message Categories
 
