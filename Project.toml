@@ -8,6 +8,12 @@ Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 
+[weakdeps]
+Tracy = "e689d1e8-eaf7-477a-ba6d-2dc50cd4e5ad"
+
+[extensions]
+TracyExt = "Tracy"
+
 [compat]
 DocStringExtensions = "0.9.5"
 ExplicitImports = "1.10.3"
@@ -15,6 +21,7 @@ Logging = "1.1.0"
 LoggingExtras = "1.1.0"
 Preferences = "1.5.0"
 SafeTestsets = "0.1.0"
+Tracy = "0.1"
 julia = "1.10"
 
 [extras]
