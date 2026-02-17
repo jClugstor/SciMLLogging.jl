@@ -31,7 +31,8 @@ end
 
 function emit_message(
         f::Function, level, option, file, line,
-        _module; kwargs...)
+        _module; kwargs...
+    )
     message = f()
     msg = "Verbosity toggle: $option \n $message"
     @static if LOGGING_BACKEND == "core"
@@ -47,8 +48,10 @@ function emit_message(
     end
 end
 
-function emit_message(message::AbstractString,
-        level, option, file, line, _module; kwargs...)
+function emit_message(
+        message::AbstractString,
+        level, option, file, line, _module; kwargs...
+    )
 
     msg = "Verbosity toggle: $option \n $message"
     @static if LOGGING_BACKEND == "core"
@@ -64,15 +67,18 @@ function emit_message(message::AbstractString,
     end
 end
 
-function emit_message(message::AbstractString,
-    level::Nothing, option, file, line, _module; kwargs...)
+function emit_message(
+        message::AbstractString,
+        level::Nothing, option, file, line, _module; kwargs...
+    )
 end
 
 # Stub for SciMLLoggingTracyExt
 function emit_tracy_message end
 
 function emit_message(
-    f::Function, level::Nothing, option, file, line, _module; kwargs...)
+        f::Function, level::Nothing, option, file, line, _module; kwargs...
+    )
 end
 
 # Helper function to emit log messages using the lower-level Logging API
@@ -87,9 +93,10 @@ function _emit_log(level, message, _module, file, line; kwargs...)
 
     if logger !== nothing && Base.invokelatest(Base.CoreLogging.shouldlog, logger, level, _module, group, id)
         Base.CoreLogging.handle_message(
-            logger, level, message, _module, group, id, file, line; kwargs...)
+            logger, level, message, _module, group, id, file, line; kwargs...
+        )
     end
-    nothing
+    return nothing
 end
 
 function get_message_level(verb::AbstractVerbositySpecifier, option)
@@ -207,7 +214,8 @@ macro SciMLMessage(f_or_message, verb, option, exs...)
             $file,
             $line,
             $_module;
-            $(kwargs...))
+            $(kwargs...)
+        )
     end
     return expr
 end
