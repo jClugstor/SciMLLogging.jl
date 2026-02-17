@@ -67,11 +67,10 @@ function emit_message(
     end
 end
 
-# Default fallback if Tracy extension is not loaded
-function emit_tracy_message(msg, level, file, line, _module)
-    @warn "Tracy backend selected but Tracy.jl is not loaded. Falling back to standard logging."
-    Base.@logmsg level msg _file = file _line = line _module = _module
-end
+# Stub for Tracy extension to extend
+# This will be extended by SciMLLoggingTracyExt when Tracy.jl is loaded
+# If Tracy is not loaded, a MethodError will occur (warned about in __init__)
+function emit_tracy_message end
 
 function emit_message(
         message::AbstractString,

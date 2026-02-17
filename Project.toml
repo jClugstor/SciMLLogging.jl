@@ -12,7 +12,7 @@ Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 Tracy = "e689d1e8-eaf7-477a-ba6d-2dc50cd4e5ad"
 
 [extensions]
-TracyExt = "Tracy"
+SciMLLoggingTracyExt = "Tracy"
 
 [compat]
 DocStringExtensions = "0.9.5"
