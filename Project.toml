@@ -9,7 +9,7 @@ LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 
 [weakdeps]
-Tracy = "e689d1e8-eaf7-477a-ba6d-2dc50cd4e5ad"
+Tracy = "e689c965-62c8-4b79-b2c5-8359227902fd"
 
 [extensions]
 SciMLLoggingTracyExt = "Tracy"
