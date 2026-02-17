@@ -36,6 +36,8 @@ function emit_message(
     msg = "Verbosity toggle: $option \n $message"
     @static if LOGGING_BACKEND == "core"
         Core.println(msg)
+    elseif LOGGING_BACKEND == "tracy"
+        emit_tracy_message(msg, level, file, line, _module)
     else
         _emit_log(level, msg, _module, file, line; kwargs...)
     end
@@ -51,6 +53,8 @@ function emit_message(message::AbstractString,
     msg = "Verbosity toggle: $option \n $message"
     @static if LOGGING_BACKEND == "core"
         Core.println(msg)
+    elseif LOGGING_BACKEND == "tracy"
+        emit_tracy_message(msg, level, file, line, _module)
     else
         _emit_log(level, msg, _module, file, line; kwargs...)
     end
@@ -63,6 +67,9 @@ end
 function emit_message(message::AbstractString,
     level::Nothing, option, file, line, _module; kwargs...)
 end
+
+# Stub for SciMLLoggingTracyExt
+function emit_tracy_message end
 
 function emit_message(
     f::Function, level::Nothing, option, file, line, _module; kwargs...)
@@ -289,15 +296,16 @@ end
 Set the logging backend preference. Valid options are:
 - "logging": Use Julia's standard Logging system (default)
 - "core": Use Core.println for simple output
+- "tracy": Use Tracy.jl tracymsg for profiling (requires Tracy.jl to be loaded)
 
 Note: You must restart Julia for this preference change to take effect.
 """
 function set_logging_backend(backend::String)
-    return if backend in ["logging", "core"]
+    return if backend in ["logging", "core", "tracy"]
         @set_preferences!("logging_backend" => backend)
         @info("Logging backend set to '$backend'. Restart Julia for changes to take effect!")
     else
-        throw(ArgumentError("Invalid backend '$backend'. Valid options are: 'logging', 'core'"))
+        throw(ArgumentError("Invalid backend '$backend'. Valid options are: 'logging', 'core', 'tracy'"))
     end
 end
 
