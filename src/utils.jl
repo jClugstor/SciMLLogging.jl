@@ -67,9 +67,7 @@ function emit_message(
     end
 end
 
-# Stub for Tracy extension to extend
-# This will be extended by SciMLLoggingTracyExt when Tracy.jl is loaded
-# If Tracy is not loaded, a MethodError will occur (warned about in __init__)
+# Stub for SciMLLoggingTracyExt
 function emit_tracy_message end
 
 function emit_message(
