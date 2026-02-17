@@ -24,7 +24,7 @@ function SciMLLogging.emit_tracy_message(msg, level, _file, _line, __module)
     # Use Tracy.jl's tracymsg to emit the message with color based on log level
     # The message will show up in the Tracy profiler with appropriate color
     color = level_to_color(level)
-    Tracy.tracymsg(msg; color)
+    return Tracy.tracymsg(msg; color)
 end
 
 end
