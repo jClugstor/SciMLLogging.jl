@@ -18,7 +18,7 @@ Must include at least `Standard`. Can define custom presets beyond the standard 
 
 # Generated Code
 
-**Struct:** Creates `name{T1, T2, ...} <: AbstractVerbositySpecifier` with fields for each toggle.
+**Struct:** Creates `name{Enabled} <: AbstractVerbositySpecifier{Enabled}` with fields for each toggle.
 
 **Constructors:**
 - `name()`: Default constructor using Standard preset
@@ -120,26 +120,26 @@ macro verbosity_specifier(name, block)
     # Generate custom preset types
     custom_preset_defs = [:(struct $p <: AbstractVerbosityPreset end) for p in custom_presets]
 
-    # Generate parametric struct
-    type_params = [Symbol("T$i") for i in eachindex(toggles)]
-    struct_fields = [:($(toggles[i])::$(type_params[i])) for i in eachindex(toggles)]
+    # Generate struct with single {Enabled} type param
+    struct_fields = [:($(toggles[i])::Union{SciMLLogging.MessageLevel, SciMLLogging.AbstractVerbosityPreset, SciMLLogging.AbstractVerbositySpecifier}) for i in eachindex(toggles)]
 
     struct_def = :(
-        struct $name{$(type_params...)} <: AbstractVerbositySpecifier
+        struct $name{Enabled} <: SciMLLogging.AbstractVerbositySpecifier{Enabled}
             $(struct_fields...)
         end
     )
 
-    # Generate preset constructors
+    # Generate preset constructors — None() produces {false}, everything else {true}
     preset_constructors = []
     for preset_name in preset_names
         preset_config = presets_dict[preset_name]
         field_values = [preset_config[t] for t in toggles]
+        enabled = preset_name === :None ? false : true
 
         push!(
             preset_constructors, :(
                 function $name(::$preset_name)
-                    return $name($(field_values...))
+                    return $name{$enabled}($(field_values...))
                 end
             )
         )
@@ -229,7 +229,7 @@ macro verbosity_specifier(name, block)
 
             # Fast path: all defaults
             if $runtime_condition
-                return $name($(fast_path_values...))
+                return $name{true}($(fast_path_values...))
             end
 
             # Validate groups
@@ -257,7 +257,7 @@ macro verbosity_specifier(name, block)
             # Apply precedence
             $(toggle_assignments...)
 
-            return $name($([t for t in toggles]...))
+            return $name{true}($([t for t in toggles]...))
         end
     end
 
