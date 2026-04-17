@@ -11,7 +11,7 @@ abstract type AbstractVerbositySpecifier{Enabled} end
 
 # Utilities
 
-function logging_message_level(m::MessageLevel)
+Base.@assume_effects :foldable @inline function logging_message_level(m::MessageLevel)
     m == Silent     && return nothing
     m == DebugLevel && return Logging.Debug
     m == InfoLevel  && return Logging.Info
@@ -94,15 +94,15 @@ function _emit_log(level, message, _module, file, line; kwargs...)
     return nothing
 end
 
-function get_message_level(::AbstractVerbositySpecifier{false}, ::Any)
+Base.@assume_effects :foldable @inline function get_message_level(::AbstractVerbositySpecifier{false}, ::Any)
     return nothing
 end
 
-function get_message_level(verb::AbstractVerbositySpecifier{true}, option)
+Base.@assume_effects :foldable @inline function get_message_level(verb::AbstractVerbositySpecifier{true}, option)
     return logging_message_level(getproperty(verb, option))
 end
 
-function get_message_level(verb::Bool, _)
+Base.@assume_effects :foldable @inline function get_message_level(verb::Bool, _)
     return verb ? logging_message_level(WarnLevel) : nothing
 end
 
