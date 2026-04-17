@@ -130,9 +130,13 @@ macro verbosity_specifier(name, block)
     custom_presets     = filter(p -> !(p in standard_presets), preset_names)
     custom_preset_defs = [:(struct $p <: AbstractVerbosityPreset end) for p in custom_presets]
 
-    # Toggles: concrete MessageLevel — enables @assume_effects :foldable to fire
-    # Specifiers: Union for sub-specifiers and presets
-    toggle_fields    = [:($(t)::SciMLLogging.MessageLevel) for t in toggles]
+    # If specifiers section is declared, toggles get concrete ::MessageLevel fields
+    # (enabling @assume_effects :foldable to fire) and specifiers get the Union.
+    # If no specifiers section, all fields use the Union for backward compatibility.
+    toggle_field_type = specifiers_expr !== nothing ?
+        :(SciMLLogging.MessageLevel) :
+        :(Union{SciMLLogging.MessageLevel, SciMLLogging.AbstractVerbosityPreset, SciMLLogging.AbstractVerbositySpecifier})
+    toggle_fields    = [:($(t)::$toggle_field_type) for t in toggles]
     specifier_fields = [:($(s)::Union{SciMLLogging.AbstractVerbositySpecifier, SciMLLogging.AbstractVerbosityPreset}) for s in specifiers]
     struct_fields    = [toggle_fields; specifier_fields]
 
@@ -215,6 +219,10 @@ macro verbosity_specifier(name, block)
         :macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
         "Unknown verbosity option: \$key. Valid options are: $(Tuple(all_fields))"
     )
+    invalid_type_str = Expr(
+        :macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
+        "\$key must be a SciMLLogging.MessageLevel, AbstractVerbosityPreset, or AbstractVerbositySpecifier, got \$(typeof(value))"
+    )
     toggle_type_str = Expr(
         :macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
         "\$key is a toggle and must be a SciMLLogging.MessageLevel, got \$(typeof(value))"
@@ -240,7 +248,12 @@ macro verbosity_specifier(name, block)
 
             for (key, value) in pairs(kwargs)
                 if key in $(Tuple(toggles))
-                    !(value isa MessageLevel) && throw(ArgumentError($toggle_type_str))
+                    if $(specifiers_expr !== nothing)
+                        !(value isa MessageLevel) && throw(ArgumentError($toggle_type_str))
+                    else
+                        !(value isa AbstractMessageLevel || value isa AbstractVerbosityPreset || value isa AbstractVerbositySpecifier) &&
+                            throw(ArgumentError($invalid_type_str))
+                    end
                 elseif key in $(Tuple(specifiers))
                     !(value isa AbstractVerbositySpecifier || value isa AbstractVerbosityPreset) &&
                         throw(ArgumentError($specifier_type_str))
