@@ -1,7 +1,8 @@
 using SciMLLogging
 using LinearSolve: LinearProblem, LinearVerbosity, solve as lin_solve
 using NonlinearSolve: NonlinearProblem, NonlinearVerbosity, solve as nl_solve
-using OrdinaryDiffEq: ODEProblem, DEVerbosity, Tsit5, solve as ode_solve
+using OrdinaryDiffEq: ODEProblem, Tsit5, solve as ode_solve
+using DiffEqBase: DEVerbosity
 using JET
 using Test
 
