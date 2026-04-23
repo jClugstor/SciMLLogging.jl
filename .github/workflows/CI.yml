@@ -38,6 +38,14 @@ jobs:
           - version: '1'
             os: ubuntu-latest
             arch: x64
+            group: NoPre
+          - version: 'lts'
+            os: ubuntu-latest
+            arch: x64
+            group: NoPre
+          - version: '1'
+            os: ubuntu-latest
+            arch: x64
             group: Downstream
     steps:
       - uses: actions/checkout@v6
