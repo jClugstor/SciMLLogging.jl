@@ -10,7 +10,7 @@ using Test
     b = rand(4)
     prob = LinearProblem(A, b)
     verbose = LinearVerbosity(SciMLLogging.None())
-    JET.@test_opt target_modules=(SciMLLogging,) lin_solve(prob; verbose = verbose)
+    JET.@test_opt target_modules = (SciMLLogging,) lin_solve(prob; verbose = verbose)
 end
 
 @testset "JET report_opt: NonlinearSolve with SciMLLogging.None()" begin
@@ -18,7 +18,7 @@ end
     u0 = [1.0]
     prob = NonlinearProblem(f, u0, 2.0)
     verbose = NonlinearVerbosity(SciMLLogging.None())
-    JET.@test_opt target_modules=(SciMLLogging,) nl_solve(prob; verbose = verbose)
+    JET.@test_opt target_modules = (SciMLLogging,) nl_solve(prob; verbose = verbose)
 end
 
 @testset "JET report_opt: OrdinaryDiffEq with SciMLLogging.None()" begin
@@ -27,5 +27,5 @@ end
     tspan = (0.0, 1.0)
     prob = ODEProblem(f, u0, tspan)
     verbose = DEVerbosity(SciMLLogging.None())
-    JET.@test_opt target_modules=(SciMLLogging,) ode_solve(prob, Tsit5(); verbose = verbose)
+    JET.@test_opt target_modules = (SciMLLogging,) ode_solve(prob, Tsit5(); verbose = verbose)
 end

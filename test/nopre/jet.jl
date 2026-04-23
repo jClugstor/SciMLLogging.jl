@@ -1,7 +1,7 @@
 using SciMLLogging
 using SciMLLogging: @SciMLMessage, @verbosity_specifier,
-                    Silent, InfoLevel, WarnLevel, ErrorLevel,
-                    None, Standard
+    Silent, InfoLevel, WarnLevel, ErrorLevel,
+    None, Standard
 using JET
 using Test
 
@@ -12,13 +12,13 @@ using Test
         None = (
             a = Silent(),
             b = Silent(),
-            c = Silent()
+            c = Silent(),
         ),
         Standard = (
             a = WarnLevel(),
             b = InfoLevel(),
-            c = ErrorLevel()
-        )
+            c = ErrorLevel(),
+        ),
     )
 
     groups = ()
@@ -33,5 +33,5 @@ end
 
 @testset "JET report_opt with None() preset" begin
     verbose = JETTestVerbosity(None())
-    JET.@test_opt target_modules=(SciMLLogging,) emit_all(verbose)
+    JET.@test_opt target_modules = (SciMLLogging,) emit_all(verbose)
 end
