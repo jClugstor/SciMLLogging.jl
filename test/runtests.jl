@@ -15,6 +15,7 @@ if GROUP == "Core" || GROUP == "All"
     @time @safetestset "Verbosity Specifier Generation Tests" include("generation_test.jl")
     @time @safetestset "Explicit Imports" include("explicit_imports.jl")
     if isempty(VERSION.prerelease)
+        Pkg.add("JET")
         @time @safetestset "JET" include("jet.jl")
     end
 end
