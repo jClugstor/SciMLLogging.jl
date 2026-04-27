@@ -92,8 +92,10 @@ function _emit_log(level, message, _module, file, line; kwargs...)
     logger = Base.CoreLogging.current_logger_for_env(level, group, _module)
 
     if logger !== nothing && Base.invokelatest(Base.CoreLogging.shouldlog, logger, level, _module, group, id)
-        Base.invokelatest(Base.CoreLogging.handle_message,
-            logger, level, message, _module, group, id, file, line; kwargs...)
+        Base.invokelatest(
+            Base.CoreLogging.handle_message,
+            logger, level, message, _module, group, id, file, line; kwargs...
+        )
     end
     return nothing
 end
