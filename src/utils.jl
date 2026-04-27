@@ -127,12 +127,12 @@ The macro works with any `AbstractVerbositySpecifier` implementation:
 
 ```julia
 # Package defines verbosity specifier
-@concrete struct SolverVerbosity <: AbstractVerbositySpecifier
-    initialization
-    progress
-    convergence
-    diagnostics
-    performance
+struct SolverVerbosity{Enabled} <: AbstractVerbositySpecifier{Enabled}
+    initialization::MessageLevel
+    progress::MessageLevel
+    convergence::MessageLevel
+    diagnostics::MessageLevel
+    performance::MessageLevel
 end
 
 # Usage in package code
