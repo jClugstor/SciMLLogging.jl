@@ -138,11 +138,11 @@ macro verbosity_specifier(name, block)
     custom_preset_defs = [:(struct $p <: AbstractVerbosityPreset end) for p in custom_presets]
 
     # If specifiers section is declared, toggles get concrete ::MessageLevel fields
-    # (enabling @assume_effects :foldable to fire) and each specifier gets its own
-    # type parameter, so the field type is concrete for whatever instance the user
-    # plugs in (a sub-specifier from another package, or a preset). This is what
-    # lets inference flow through `outer.inner` into downstream APIs without the
-    # tail of LinearCache-style parameter chains collapsing into existentials.
+    # and each specifier gets its own type parameter, so the field type is concrete
+    # for whatever instance the user plugs in (a sub-specifier from another package,
+    # or a preset). This is what lets inference flow through `outer.inner` into
+    # downstream APIs without the tail of LinearCache-style parameter chains
+    # collapsing into existentials.
     #
     # If no specifiers section, all fields use the wider Union for backward compatibility.
     has_specifiers = specifiers_expr !== nothing
