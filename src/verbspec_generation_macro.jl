@@ -66,10 +66,10 @@ end
 ```
 """
 macro verbosity_specifier(name, block)
-    local toggles_expr    = nothing
+    local toggles_expr = nothing
     local specifiers_expr = nothing
-    local presets_expr    = nothing
-    local groups_expr     = nothing
+    local presets_expr = nothing
+    local groups_expr = nothing
 
     if block.head == :block
         for ex in block.args
@@ -91,7 +91,7 @@ macro verbosity_specifier(name, block)
 
     toggles_expr !== nothing || throw(ArgumentError("toggles must be defined in block"))
     presets_expr !== nothing || throw(ArgumentError("presets must be defined in block"))
-    groups_expr  !== nothing || throw(ArgumentError("groups must be defined in block"))
+    groups_expr !== nothing || throw(ArgumentError("groups must be defined in block"))
 
     toggles_expr.head == :tuple || throw(ArgumentError("toggles must be a tuple"))
     toggles = [t.value for t in toggles_expr.args]
@@ -109,7 +109,7 @@ macro verbosity_specifier(name, block)
     presets_dict = Dict()
     for preset_def in presets_expr.args
         preset_def.head == :(=) || throw(ArgumentError("Each preset must be name = (...)"))
-        preset_name   = preset_def.args[1]
+        preset_name = preset_def.args[1]
         preset_values = preset_def.args[2]
         preset_values.head == :tuple || throw(ArgumentError("Preset values must be a NamedTuple"))
         preset_config = Dict()
@@ -124,17 +124,17 @@ macro verbosity_specifier(name, block)
     groups_dict = Dict()
     for group_def in groups_expr.args
         group_def.head == :(=) || throw(ArgumentError("Each group must be name = (...)"))
-        group_name        = group_def.args[1]
+        group_name = group_def.args[1]
         group_fields_expr = group_def.args[2]
         group_fields_expr.head == :tuple || throw(ArgumentError("Group fields must be a tuple"))
         groups_dict[group_name] = [t isa QuoteNode ? t.value : t for t in group_fields_expr.args]
     end
 
     preset_names = collect(keys(presets_dict))
-    group_names  = collect(keys(groups_dict))
+    group_names = collect(keys(groups_dict))
 
-    standard_presets   = (:None, :Minimal, :Standard, :Detailed, :All)
-    custom_presets     = filter(p -> !(p in standard_presets), preset_names)
+    standard_presets = (:None, :Minimal, :Standard, :Detailed, :All)
+    custom_presets = filter(p -> !(p in standard_presets), preset_names)
     custom_preset_defs = [:(struct $p <: AbstractVerbosityPreset end) for p in custom_presets]
 
     # If specifiers section is declared, toggles get concrete ::MessageLevel fields
@@ -145,18 +145,18 @@ macro verbosity_specifier(name, block)
     # tail of LinearCache-style parameter chains collapsing into existentials.
     #
     # If no specifiers section, all fields use the wider Union for backward compatibility.
-    has_specifiers   = specifiers_expr !== nothing
+    has_specifiers = specifiers_expr !== nothing
     spec_type_params = has_specifiers ?
         [Symbol("__SPEC_T_", i) for i in 1:length(specifiers)] :
         Symbol[]
     toggle_field_type = has_specifiers ?
         :(SciMLLogging.MessageLevel) :
         :(Union{SciMLLogging.MessageLevel, SciMLLogging.AbstractVerbosityPreset, SciMLLogging.AbstractVerbositySpecifier})
-    toggle_fields    = [:($(t)::$toggle_field_type) for t in toggles]
+    toggle_fields = [:($(t)::$toggle_field_type) for t in toggles]
     specifier_fields = has_specifiers ?
         [:($(s)::$(spec_type_params[i])) for (i, s) in enumerate(specifiers)] :
         Expr[]
-    struct_fields    = [toggle_fields; specifier_fields]
+    struct_fields = [toggle_fields; specifier_fields]
 
     struct_type_params = [:Enabled; spec_type_params]
     struct_def = :(
@@ -174,10 +174,12 @@ macro verbosity_specifier(name, block)
     # emitting our own would shadow it and infinite-recurse.
     partial_app_ctor = if has_specifiers && !isempty(specifiers)
         all_arg_names = [Symbol("__arg_", f) for f in all_fields]
-        typeof_specs  = [:(typeof($(Symbol("__arg_", s)))) for s in specifiers]
-        :(function $name{Enabled}($(all_arg_names...)) where {Enabled}
-            return $name{Enabled, $(typeof_specs...)}($(all_arg_names...))
-        end)
+        typeof_specs = [:(typeof($(Symbol("__arg_", s)))) for s in specifiers]
+        :(
+            function $name{Enabled}($(all_arg_names...)) where {Enabled}
+                return $name{Enabled, $(typeof_specs...)}($(all_arg_names...))
+            end
+        )
     else
         nothing
     end
@@ -186,13 +188,15 @@ macro verbosity_specifier(name, block)
     preset_constructors = []
     for preset_name in preset_names
         preset_config = presets_dict[preset_name]
-        field_values  = [preset_config[f] for f in all_fields]
-        enabled       = preset_name === :None ? false : true
-        push!(preset_constructors, :(
-            function $name(::$preset_name)
-                return $name{$enabled}($(field_values...))
-            end
-        ))
+        field_values = [preset_config[f] for f in all_fields]
+        enabled = preset_name === :None ? false : true
+        push!(
+            preset_constructors, :(
+                function $name(::$preset_name)
+                    return $name{$enabled}($(field_values...))
+                end
+            )
+        )
     end
 
     # Map each field to its group
@@ -207,7 +211,7 @@ macro verbosity_specifier(name, block)
         end
     end
 
-    standard_config  = presets_dict[:Standard]
+    standard_config = presets_dict[:Standard]
     fast_path_values = [standard_config[f] for f in all_fields]
 
     # Group validation
@@ -217,17 +221,19 @@ macro verbosity_specifier(name, block)
             :macrocall, Symbol("@lazy_str"), LineNumberNode(@__LINE__, @__FILE__),
             "\$($(QuoteNode(group_name))) must be a SciMLLogging.AbstractMessageLevel, got \$(typeof($(group_name)))"
         )
-        push!(group_validations, quote
-            if $(group_name) !== nothing && !($(group_name) isa AbstractMessageLevel)
-                throw(ArgumentError($lazy_str))
+        push!(
+            group_validations, quote
+                if $(group_name) !== nothing && !($(group_name) isa AbstractMessageLevel)
+                    throw(ArgumentError($lazy_str))
+                end
             end
-        end)
+        )
     end
 
     # Field assignments with precedence: individual > group > preset
     field_assignments = []
     for f in all_fields
-        group     = field_to_group[f]
+        group = field_to_group[f]
         field_key = QuoteNode(f)
         if group === nothing
             push!(field_assignments, :($f = haskey(kwargs, $field_key) ? kwargs[$field_key] : preset_config[$field_key]))
@@ -244,7 +250,7 @@ macro verbosity_specifier(name, block)
     end
     preset_map_const = :(const $(Symbol("_preset_map_", name)) = NamedTuple{$(Tuple(preset_names))}(($(preset_configs...),)))
 
-    kwarg_params      = [Expr(:kw, :preset, :nothing); [Expr(:kw, g, :nothing) for g in group_names]]
+    kwarg_params = [Expr(:kw, :preset, :nothing); [Expr(:kw, g, :nothing) for g in group_names]]
     runtime_condition = foldr((a, b) -> :($a && $b), [:($(g) === nothing) for g in group_names]; init = :(preset === nothing && isempty(kwargs)))
 
     preset_error_str = Expr(

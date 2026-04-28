@@ -542,11 +542,11 @@ end
     toggles = (:inner_a, :inner_b)
 
     presets = (
-        None     = (inner_a = Silent(),    inner_b = Silent()),
-        Minimal  = (inner_a = WarnLevel(), inner_b = Silent()),
+        None = (inner_a = Silent(), inner_b = Silent()),
+        Minimal = (inner_a = WarnLevel(), inner_b = Silent()),
         Standard = (inner_a = InfoLevel(), inner_b = WarnLevel()),
         Detailed = (inner_a = DebugLevel(), inner_b = InfoLevel()),
-        All      = (inner_a = DebugLevel(), inner_b = DebugLevel()),
+        All = (inner_a = DebugLevel(), inner_b = DebugLevel()),
     )
 
     groups = ()
@@ -562,27 +562,27 @@ end
         None = (
             outer_a = Silent(),
             outer_b = Silent(),
-            inner   = InnerVerb(None()),
+            inner = InnerVerb(None()),
         ),
         Minimal = (
             outer_a = WarnLevel(),
             outer_b = Silent(),
-            inner   = InnerVerb(Minimal()),
+            inner = InnerVerb(Minimal()),
         ),
         Standard = (
             outer_a = InfoLevel(),
             outer_b = WarnLevel(),
-            inner   = InnerVerb(Standard()),
+            inner = InnerVerb(Standard()),
         ),
         Detailed = (
             outer_a = DebugLevel(),
             outer_b = InfoLevel(),
-            inner   = InnerVerb(Detailed()),
+            inner = InnerVerb(Detailed()),
         ),
         All = (
             outer_a = DebugLevel(),
             outer_b = DebugLevel(),
-            inner   = InnerVerb(All()),
+            inner = InnerVerb(All()),
         ),
     )
 
@@ -665,10 +665,10 @@ end
 
     @testset "Combined preset + specifier override + group + individual" begin
         v = OuterVerb(
-            preset      = Detailed(),
-            inner       = InnerVerb(None()),
+            preset = Detailed(),
+            inner = InnerVerb(None()),
             outer_group = WarnLevel(),
-            outer_a     = ErrorLevel()
+            outer_a = ErrorLevel()
         )
         @test v.outer_a == ErrorLevel()                # individual wins
         @test v.outer_b == WarnLevel()                 # from group
@@ -698,5 +698,5 @@ end
 # This guards against accidentally regressing the backward-compatible code path.
 @testset "Toggle-only spec retains Union field typing" begin
     @test fieldtype(VerbSpec{true}, :toggle1) ===
-          Union{MessageLevel, AbstractVerbosityPreset, AbstractVerbositySpecifier}
+        Union{MessageLevel, AbstractVerbosityPreset, AbstractVerbositySpecifier}
 end
