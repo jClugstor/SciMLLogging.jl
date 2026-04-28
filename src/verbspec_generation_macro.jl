@@ -14,8 +14,13 @@ Generates a parametric struct and constructors for a verbosity specifier.
 enabling compile-time branch elimination when the specifier is a constant.
 
 **specifiers:** (optional) Tuple of symbols for sub-specifier fields that hold another
-`AbstractVerbositySpecifier` or `AbstractVerbosityPreset`. Fields are typed as
-`Union{AbstractVerbositySpecifier, AbstractVerbosityPreset}`.
+`AbstractVerbositySpecifier` or `AbstractVerbosityPreset`. Each specifier field becomes
+its own type parameter on the generated struct, so the field is concretely typed at the
+instance level. This preserves inference when the sub-specifier is forwarded to a
+downstream API (e.g. `solve(...; verbose = outer.linear_verbosity)`), and lets the
+outer-spec-defining package hold a sub-specifier type that it does not depend on at
+definition time (e.g. DiffEqBase holding a NonlinearVerbosity without depending on
+NonlinearSolve).
 
 **presets:** Named tuple mapping preset names to field configurations. Each preset maps
 field names to message levels, presets, or specifier instances.
@@ -27,8 +32,10 @@ setting multiple fields at once.
 
 # Generated Code
 
-**Struct:** Creates `name{Enabled} <: AbstractVerbositySpecifier{Enabled}` with concrete
-`MessageLevel` fields for toggles and Union fields for specifiers.
+**Struct:** Creates `name{Enabled, S1, ..., Sk} <: AbstractVerbositySpecifier{Enabled}`,
+where `S1..Sk` are the type parameters for each declared specifier (in order). Toggle
+fields are `::MessageLevel`. If no specifiers block is given, the struct is just
+`name{Enabled}` and toggle fields use a wider Union for backward compatibility.
 
 **Constructors:**
 - `name()`: Default constructor using Standard preset
@@ -131,20 +138,49 @@ macro verbosity_specifier(name, block)
     custom_preset_defs = [:(struct $p <: AbstractVerbosityPreset end) for p in custom_presets]
 
     # If specifiers section is declared, toggles get concrete ::MessageLevel fields
-    # (enabling @assume_effects :foldable to fire) and specifiers get the Union.
-    # If no specifiers section, all fields use the Union for backward compatibility.
-    toggle_field_type = specifiers_expr !== nothing ?
+    # (enabling @assume_effects :foldable to fire) and each specifier gets its own
+    # type parameter, so the field type is concrete for whatever instance the user
+    # plugs in (a sub-specifier from another package, or a preset). This is what
+    # lets inference flow through `outer.inner` into downstream APIs without the
+    # tail of LinearCache-style parameter chains collapsing into existentials.
+    #
+    # If no specifiers section, all fields use the wider Union for backward compatibility.
+    has_specifiers   = specifiers_expr !== nothing
+    spec_type_params = has_specifiers ?
+        [Symbol("__SPEC_T_", i) for i in 1:length(specifiers)] :
+        Symbol[]
+    toggle_field_type = has_specifiers ?
         :(SciMLLogging.MessageLevel) :
         :(Union{SciMLLogging.MessageLevel, SciMLLogging.AbstractVerbosityPreset, SciMLLogging.AbstractVerbositySpecifier})
     toggle_fields    = [:($(t)::$toggle_field_type) for t in toggles]
-    specifier_fields = [:($(s)::Union{SciMLLogging.AbstractVerbositySpecifier, SciMLLogging.AbstractVerbosityPreset}) for s in specifiers]
+    specifier_fields = has_specifiers ?
+        [:($(s)::$(spec_type_params[i])) for (i, s) in enumerate(specifiers)] :
+        Expr[]
     struct_fields    = [toggle_fields; specifier_fields]
 
+    struct_type_params = [:Enabled; spec_type_params]
     struct_def = :(
-        struct $name{Enabled} <: SciMLLogging.AbstractVerbositySpecifier{Enabled}
+        struct $name{$(struct_type_params...)} <: SciMLLogging.AbstractVerbositySpecifier{Enabled}
             $(struct_fields...)
         end
     )
+
+    # When specifiers are present, the auto-generated constructor requires all type
+    # parameters. Add a partial-application outer constructor that takes only Enabled
+    # and lets Julia infer the specifier types from the arg types — so call sites
+    # everywhere can write `$name{true}(...)`.
+    # Skip if the specifiers tuple is declared empty: then the struct has no extra
+    # type params and the auto-generated `name{Enabled}(...)` already exists, so
+    # emitting our own would shadow it and infinite-recurse.
+    partial_app_ctor = if has_specifiers && !isempty(specifiers)
+        all_arg_names = [Symbol("__arg_", f) for f in all_fields]
+        typeof_specs  = [:(typeof($(Symbol("__arg_", s)))) for s in specifiers]
+        :(function $name{Enabled}($(all_arg_names...)) where {Enabled}
+            return $name{Enabled, $(typeof_specs...)}($(all_arg_names...))
+        end)
+    else
+        nothing
+    end
 
     # Preset constructors — None() produces {false}, everything else {true}
     preset_constructors = []
@@ -271,12 +307,23 @@ macro verbosity_specifier(name, block)
         end
     end
 
-    result = quote
-        $(custom_preset_defs...)
-        $preset_map_const
-        $struct_def
-        $(preset_constructors...)
-        $main_constructor
+    result = if partial_app_ctor === nothing
+        quote
+            $(custom_preset_defs...)
+            $preset_map_const
+            $struct_def
+            $(preset_constructors...)
+            $main_constructor
+        end
+    else
+        quote
+            $(custom_preset_defs...)
+            $preset_map_const
+            $struct_def
+            $partial_app_ctor
+            $(preset_constructors...)
+            $main_constructor
+        end
     end
 
     return esc(result)

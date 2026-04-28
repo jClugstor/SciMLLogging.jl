@@ -226,9 +226,9 @@ macro SciMLMessage(f_or_message, verb)
 end
 
 """
-        `verbosity_to_int(verb::AbstractMessageLevel)`
+        `verbosity_to_int(verb::MessageLevel)`
 
-    Takes a `AbstractMessageLevel` and gives a corresponding integer value.
+    Takes a `MessageLevel` and gives a corresponding integer value.
     Verbosity settings that use integers or enums that hold integers are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity. Each of the basic verbosity levels
     are mapped to an integer.
@@ -261,9 +261,9 @@ function verbosity_to_int(verb::MessageLevel)
 end
 
 """
-        `verbosity_to_bool(verb::AbstractMessageLevel)`
-        
-    Takes a `AbstractMessageLevel` and gives a corresponding boolean value.
+        `verbosity_to_bool(verb::MessageLevel)`
+
+    Takes a `MessageLevel` and gives a corresponding boolean value.
     Verbosity settings that use booleans are relatively common.
     This provides an interface so that these packages can be used with SciMLVerbosity.
     If the verbosity is `Silent`, then `false` is returned. Otherwise, `true` is returned.

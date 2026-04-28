@@ -45,7 +45,7 @@ end
 
 ## Configuring Message Categories
 
-Each field in a verbosity specifier can be set to any `AbstractMessageLevel`:
+Each field in a verbosity specifier can be set to any `MessageLevel`:
 
 ```julia
 # Create a custom configuration
