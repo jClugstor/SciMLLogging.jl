@@ -61,19 +61,43 @@ All
 
 ## Custom Presets
 
-Packages can define their own preset types for specialized use cases:
+Packages can define their own preset types for specialized use cases. With the
+`@verbosity_specifier` macro, simply add the custom preset as a key in the
+`presets` block — the macro generates the preset's struct definition and the
+matching constructor automatically:
 
 ```julia
-# Package-specific preset
+@verbosity_specifier MyPackageVerbosity begin
+    toggles = (:initialization, :progress, :convergence, :warnings, :errors)
+
+    presets = (
+        # ... standard presets ...
+        DebuggingPreset = (
+            initialization = InfoLevel(),
+            progress       = DebugLevel(),  # Extra detailed progress
+            convergence    = InfoLevel(),
+            warnings       = WarnLevel(),
+            errors         = ErrorLevel(),
+        ),
+    )
+
+    groups = ()
+end
+```
+
+For a manually-defined specifier, declare the preset type and the constructor
+yourself:
+
+```julia
 struct DebuggingPreset <: AbstractVerbosityPreset end
 
 function MyPackageVerbosity(::DebuggingPreset)
-    MyPackageVerbosity{true}(
+    MyPackageVerbosity(
         initialization = InfoLevel(),
-        progress = DebugLevel(),  # Extra detailed progress
-        convergence = InfoLevel(),
-        warnings = WarnLevel(),
-        errors = ErrorLevel()
+        progress       = DebugLevel(),
+        convergence    = InfoLevel(),
+        warnings       = WarnLevel(),
+        errors         = ErrorLevel(),
     )
 end
 ```

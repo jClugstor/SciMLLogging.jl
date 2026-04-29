@@ -57,9 +57,6 @@ const CustomLevel = MessageLevel
 # Allow calling level constants with no args for backward compatibility: Silent(), InfoLevel(), etc.
 (m::MessageLevel)() = m
 
-# Backward-compatible type alias
-const AbstractMessageLevel = MessageLevel
-
 """
     AbstractVerbosityPreset
 

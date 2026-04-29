@@ -1,6 +1,6 @@
 using SciMLLogging
 using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage,
-    AbstractVerbosityPreset, MessageLevel, AbstractMessageLevel, WarnLevel, InfoLevel,
+    AbstractVerbosityPreset, MessageLevel, WarnLevel, InfoLevel,
     ErrorLevel, Silent, None, All, Minimal, Standard, Detailed, @verbosity_specifier
 using Logging
 using Test
@@ -383,46 +383,49 @@ end
     end
 end
 
-# Test with preset types as toggle values (useful for verb specs that hold other verb specs, e.g. NonlinearVerbosity)
+# Test with a sub_specifier holding a preset value (useful for verb specs that
+# hold other verb specs, e.g. DEVerbosity holding a NonlinearVerbosity).
 @verbosity_specifier HierarchicalVerbosity begin
-    toggles = (:component_a, :component_b, :component_c)
+    toggles = (:component_a, :component_c)
+
+    sub_specifiers = (:component_b,)
 
     presets = (
         None = (
             component_a = Silent(),
-            component_b = Silent(),
+            component_b = None(),
             component_c = Silent(),
         ),
         Minimal = (
             component_a = WarnLevel(),
-            component_b = Minimal(),  # Reference to another preset
+            component_b = Minimal(),
             component_c = InfoLevel(),
         ),
         Standard = (
             component_a = InfoLevel(),
-            component_b = Standard(),  # Reference to another preset
+            component_b = Standard(),
             component_c = WarnLevel(),
         ),
         Detailed = (
             component_a = DebugLevel(),
-            component_b = Detailed(),  # Reference to another preset
+            component_b = Detailed(),
             component_c = InfoLevel(),
         ),
         All = (
             component_a = ErrorLevel(),
-            component_b = All(),  # Reference to another preset
+            component_b = All(),
             component_c = DebugLevel(),
         ),
     )
 
     groups = (
         main = (:component_a,),
-        auxiliary = (:component_b, :component_c),
+        auxiliary = (:component_c,),
     )
 end
 
 @testset "HierarchicalVerbosity with Preset References" begin
-    @testset "Preset as toggle value" begin
+    @testset "Preset as sub_specifier value" begin
         v = HierarchicalVerbosity(preset = Minimal())
         @test v.component_a == WarnLevel()
         @test v.component_b == Minimal()  # Should be the preset type, not expanded
@@ -434,16 +437,14 @@ end
         @test v2.component_c == WarnLevel()
     end
 
-    @testset "Override preset-typed toggle" begin
-        # Override a preset-typed toggle with a message level
-        v = HierarchicalVerbosity(preset = Standard(), component_b = ErrorLevel())
+    @testset "Override sub_specifier with another preset" begin
+        v = HierarchicalVerbosity(preset = Standard(), component_b = Detailed())
         @test v.component_a == InfoLevel()
-        @test v.component_b == ErrorLevel()  # Overridden
+        @test v.component_b == Detailed()  # Overridden
         @test v.component_c == WarnLevel()
     end
 
-    @testset "Set toggle to preset via kwarg" begin
-        # Set a toggle to a preset type using kwargs
+    @testset "Set sub_specifier to preset via kwarg" begin
         v = HierarchicalVerbosity(component_a = InfoLevel(), component_b = Detailed())
         @test v.component_a == InfoLevel()
         @test v.component_b == Detailed()  # Set to preset type via kwarg
@@ -552,11 +553,11 @@ end
     groups = ()
 end
 
-# Outer spec exercising the `specifiers` block: holds toggles AND a sub-specifier field
+# Outer spec exercising the `sub_specifiers` block: holds toggles AND a sub-specifier field
 @verbosity_specifier OuterVerb begin
     toggles = (:outer_a, :outer_b)
 
-    specifiers = (:inner,)
+    sub_specifiers = (:inner,)
 
     presets = (
         None = (
@@ -591,19 +592,19 @@ end
     )
 end
 
-@testset "OuterVerb with specifiers block" begin
+@testset "OuterVerb with sub_specifiers block" begin
     @testset "Field typing" begin
         v = OuterVerb()
         T = typeof(v)
-        # Toggle fields must be concretely typed as MessageLevel when specifiers block is present
+        # Toggle fields are always concretely typed as MessageLevel
         @test fieldtype(T, :outer_a) === MessageLevel
         @test fieldtype(T, :outer_b) === MessageLevel
-        # Specifier fields are parametric and resolve to the concrete instance type —
-        # this is what lets `outer.inner.toggle` flow through inference without
-        # collapsing into an abstract Union.
+        # Sub-specifier fields are parametric and resolve to the concrete instance
+        # type — this is what lets `outer.inner.toggle` flow through inference
+        # without collapsing into an abstract Union.
         @test fieldtype(T, :inner) === InnerVerb{true}
         @test isconcretetype(fieldtype(T, :inner))
-        # The outer struct has an extra type parameter for the specifier slot
+        # The outer struct has an extra type parameter for the sub_specifier slot
         @test T <: OuterVerb{true}
         @test T !== OuterVerb{true}
     end
@@ -617,7 +618,7 @@ end
         @test v.inner.inner_b == WarnLevel()
     end
 
-    @testset "Preset constructors set both toggles and specifiers" begin
+    @testset "Preset constructors set both toggles and sub_specifiers" begin
         v_none = OuterVerb(None())
         @test v_none.outer_a == Silent()
         @test v_none.outer_b == Silent()
@@ -636,14 +637,14 @@ end
         @test v_all.inner.inner_b == DebugLevel()
     end
 
-    @testset "Override specifier field via kwarg with another verbosity instance" begin
+    @testset "Override sub_specifier field via kwarg with another verbosity instance" begin
         custom_inner = InnerVerb(All())
         v = OuterVerb(inner = custom_inner)
         @test v.inner === custom_inner
         @test v.outer_a == InfoLevel()  # default from Standard preset
     end
 
-    @testset "Override specifier field via kwarg with a preset value" begin
+    @testset "Override sub_specifier field via kwarg with a preset value" begin
         v = OuterVerb(inner = None())
         @test v.inner isa None
         @test v.outer_a == InfoLevel()  # from Standard preset
@@ -660,10 +661,10 @@ end
         v = OuterVerb(outer_group = ErrorLevel())
         @test v.outer_a == ErrorLevel()
         @test v.outer_b == ErrorLevel()
-        @test v.inner isa InnerVerb     # specifier untouched
+        @test v.inner isa InnerVerb     # sub_specifier untouched
     end
 
-    @testset "Combined preset + specifier override + group + individual" begin
+    @testset "Combined preset + sub_specifier override + group + individual" begin
         v = OuterVerb(
             preset = Detailed(),
             inner = InnerVerb(None()),
@@ -675,15 +676,15 @@ end
         @test v.inner.inner_a == Silent()              # from explicit InnerVerb(None())
     end
 
-    @testset "Validation: toggle field requires MessageLevel when specifiers block is declared" begin
-        # When specifiers block is present, toggles must be a MessageLevel — passing a preset
-        # or another verbosity specifier as a toggle is rejected.
+    @testset "Validation: toggle field requires MessageLevel" begin
+        # Toggles must be a MessageLevel — passing a preset or another verbosity
+        # specifier as a toggle is rejected.
         @test_throws ArgumentError OuterVerb(outer_a = None())
         @test_throws ArgumentError OuterVerb(outer_a = InnerVerb())
         @test_throws ArgumentError OuterVerb(outer_a = "not a level")
     end
 
-    @testset "Validation: specifier field rejects non-spec/non-preset values" begin
+    @testset "Validation: sub_specifier field rejects non-spec/non-preset values" begin
         @test_throws ArgumentError OuterVerb(inner = InfoLevel())
         @test_throws ArgumentError OuterVerb(inner = "not a spec")
         @test_throws ArgumentError OuterVerb(inner = 42)
@@ -694,9 +695,9 @@ end
     end
 end
 
-# Sanity check: a spec without a specifiers block keeps the wider toggle Union typing.
-# This guards against accidentally regressing the backward-compatible code path.
-@testset "Toggle-only spec retains Union field typing" begin
-    @test fieldtype(VerbSpec{true}, :toggle1) ===
-        Union{MessageLevel, AbstractVerbosityPreset, AbstractVerbositySpecifier}
+# All toggle fields are concretely typed `::MessageLevel`, regardless of whether
+# a `sub_specifiers` block is declared.
+@testset "Toggle fields always typed MessageLevel" begin
+    @test fieldtype(VerbSpec{true}, :toggle1) === MessageLevel
+    @test fieldtype(LinearVerbosity{true}, :blas_errors) === MessageLevel
 end

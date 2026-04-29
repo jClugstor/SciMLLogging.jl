@@ -12,10 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`MessageLevel` is now a concrete struct**, no longer an abstract type with
   per-level subtypes. `Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`,
   `ErrorLevel`, and `CustomLevel` are now `MessageLevel` constants (or, for
-  `CustomLevel`, a constructor alias). `AbstractMessageLevel` remains as a
-  backward-compatible type alias for `MessageLevel`.
+  `CustomLevel`, a constructor alias). The `AbstractMessageLevel` name has been
+  removed — code referring to it must be updated to use `MessageLevel`.
   - `Silent()`, `InfoLevel()`, etc. still work — calling a `MessageLevel`
-    instance returns itself, so existing code is unaffected.
+    instance returns itself, so existing call-site syntax is unaffected.
   - Code that dispatched on the old subtypes (e.g. `f(::WarnLevel)`) needs to
     be rewritten to compare values (`level == WarnLevel`).
 
@@ -43,17 +43,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`specifiers = (...)` block in `@verbosity_specifier`** — declare fields that
-  hold a sub-specifier or preset. Each declared specifier becomes its own free
-  type parameter on the generated struct, so the field is concretely typed at
-  the instance level. This preserves inference when the sub-specifier is
-  forwarded to a downstream API, and lets a package hold a sub-specifier whose
-  type it does not depend on at definition time (e.g. DiffEqBase holding a
-  NonlinearVerbosity without depending on NonlinearSolve).
+- **`sub_specifiers = (...)` block in `@verbosity_specifier`** — declare fields
+  that hold another verbosity specifier or preset. Each declared sub_specifier
+  becomes its own free type parameter on the generated struct, so the field is
+  concretely typed at the instance level. This preserves inference when the
+  sub-specifier is forwarded to a downstream API, and lets a package hold a
+  sub-specifier whose type it does not depend on at definition time
+  (e.g. DiffEqBase holding a NonlinearVerbosity without depending on
+  NonlinearSolve).
   ```julia
   @verbosity_specifier DEVerbosity begin
-      toggles    = (:dt_select, :step_rejected)
-      specifiers = (:nonlinear_verbosity, :linear_verbosity)
+      toggles        = (:dt_select, :step_rejected)
+      sub_specifiers = (:nonlinear_verbosity, :linear_verbosity)
       presets = (
           Standard = (
               dt_select           = InfoLevel(),
@@ -70,18 +71,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The macro generates roughly:
 
   ```julia
-  # Toggle-only specifier (no `specifiers` block): single Enabled type
-  # parameter; toggle fields use a wider Union for backward compatibility.
+  # Toggle-only specifier: single Enabled type parameter; toggle fields are
+  # concretely typed `::MessageLevel`.
   struct VerbSpec{Enabled} <: AbstractVerbositySpecifier{Enabled}
-      toggle1::Union{MessageLevel, AbstractVerbosityPreset, AbstractVerbositySpecifier}
-      toggle2::Union{MessageLevel, AbstractVerbosityPreset, AbstractVerbositySpecifier}
+      toggle1::MessageLevel
+      toggle2::MessageLevel
       # ...
   end
 
-  # With a `specifiers = (:nonlinear_verbosity, :linear_verbosity)` block:
-  # one extra type parameter per declared specifier; toggle fields are concrete
-  # `MessageLevel`; specifier fields are typed by the per-instance type param,
-  # so they specialize to whatever concrete sub-spec or preset the user passes.
+  # With `sub_specifiers = (:nonlinear_verbosity, :linear_verbosity)`:
+  # one extra type parameter per declared sub_specifier; sub_specifier fields
+  # are typed by their per-instance type param, so they specialize to whatever
+  # concrete sub-spec or preset the user passes.
   struct DEVerbosity{Enabled, __SPEC_T_1, __SPEC_T_2} <: AbstractVerbositySpecifier{Enabled}
       dt_select::MessageLevel
       step_rejected::MessageLevel
@@ -89,9 +90,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       linear_verbosity::__SPEC_T_2
   end
 
-  # A partial-application constructor lets the existing call sites keep
-  # writing `DEVerbosity{true}(...)`; Julia infers the trailing type params
-  # from the positional arg types.
+  # A partial-application constructor lets the generated preset/kwarg call
+  # sites keep writing `DEVerbosity{true}(...)`; Julia infers the trailing
+  # type params from the positional arg types.
   function DEVerbosity{Enabled}(t1, t2, s1, s2) where {Enabled}
       return DEVerbosity{Enabled, typeof(s1), typeof(s2)}(t1, t2, s1, s2)
   end
@@ -105,18 +106,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
 
   Concrete instance types end up looking like
-  `DEVerbosity{true, Standard, LinearVerbosity{true}}` — both type params are
-  concrete, so `verb.linear_verbosity` returns a concrete type and inference
-  flows through into downstream APIs.
+  `DEVerbosity{true, Standard, LinearVerbosity{true}}` — both sub_specifier
+  type params are concrete, so `verb.linear_verbosity` returns a concrete type
+  and inference flows through into downstream APIs.
 
-  Specifier fields accept either an `AbstractVerbositySpecifier` instance or
-  an `AbstractVerbosityPreset` singleton; the kwarg constructor validates this.
+  Sub_specifier fields accept either an `AbstractVerbositySpecifier` instance
+  or an `AbstractVerbosityPreset` singleton; the kwarg constructor validates
+  this. Toggle fields are restricted to `MessageLevel` values.
 
 ### Changed
 
-- **Toggle fields are now concretely typed `::MessageLevel`** when a
-  `specifiers` block is declared. Without a `specifiers` block, toggle fields
-  retain the previous wider Union typing for backward compatibility.
+- **Toggle fields are always concretely typed `::MessageLevel`**. Previously a
+  toggle could hold a preset or another verbosity specifier as a workaround for
+  hierarchical configuration; that role now belongs to the new `sub_specifiers`
+  block. Macro-generated specifiers reject non-`MessageLevel` values for
+  toggles at the kwarg constructor.
 - **`@SciMLMessage` short-circuits at compile time** when the verbosity
   specifier has `Enabled === false`. The
   `get_message_level(::AbstractVerbositySpecifier{false}, ::Any)` method
@@ -130,9 +134,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    `AbstractVerbositySpecifier{Enabled}`. Default kwarg constructors should
    return `MyVerbosity{true}(...)`; the `None()` preset constructor should
    return `MyVerbosity{false}(...)`.
-2. **Macro-using specifiers with sub-specs**: move sub-specifier fields out of
-   `toggles` and into a new `specifiers` block to opt into the parametric
-   typing. No changes are required for toggle-only specifiers.
+2. **Macro-using specifiers with sub-specs**: any field that previously held a
+   preset or another verbosity specifier as a "toggle" must move out of
+   `toggles` and into a new `sub_specifiers` block. Toggles are now strictly
+   `MessageLevel`-only. Toggle-only specifiers don't need any change.
 3. **Functions accepting a `verbose=` argument** should accept both an
    `AbstractVerbositySpecifier` instance and an `AbstractVerbosityPreset`
    singleton — that's what specifier fields can hand them. The macro-generated

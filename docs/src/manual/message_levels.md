@@ -4,14 +4,19 @@ Message levels in SciMLLogging determine the severity and importance of log mess
 
 ## Overview
 
-SciMLLogging provides a hierarchy of message levels that correspond to different types of information:
+SciMLLogging defines a single concrete `MessageLevel` type (backed by an
+integer) that represents the severity of a log message. Standard severities are
+exposed as constants (`Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`,
+`ErrorLevel`); custom severities can be constructed via `CustomLevel(n)` (an
+alias for `MessageLevel(n)`).
 
 ```@docs
 MessageLevel
 ```
 
-`AbstractMessageLevel` is a backward-compatible alias for `MessageLevel`. Each level (apart from `Silent`) corresponds to a Julia Logging `LogLevel` type with an associated integer.
-See the [Julia Logging documentation](https://docs.julialang.org/en/v1/stdlib/Logging/#Log-event-structure) for more details. 
+Each level apart from `Silent` corresponds to a Julia Logging `LogLevel` with
+an associated integer. See the [Julia Logging documentation](https://docs.julialang.org/en/v1/stdlib/Logging/#Log-event-structure)
+for more details. 
 
 ## Standard Message Levels
 
