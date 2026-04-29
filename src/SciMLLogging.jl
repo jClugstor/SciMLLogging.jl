@@ -11,7 +11,7 @@ include("verbspec_generation_macro.jl")
 
 # Export public API
 export AbstractVerbositySpecifier, AbstractVerbosityPreset, MessageLevel
-export DebugLevel, InfoLevel, WarnLevel, ErrorLevel, CustomLevel, Silent
+export DebugLevel, InfoLevel, WarnLevel, ErrorLevel, Silent
 export @SciMLMessage
 export verbosity_to_int, verbosity_to_bool
 export SciMLLogger

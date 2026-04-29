@@ -7,8 +7,8 @@ Message levels in SciMLLogging determine the severity and importance of log mess
 SciMLLogging defines a single concrete `MessageLevel` type (backed by an
 integer) that represents the severity of a log message. Standard severities are
 exposed as constants (`Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`,
-`ErrorLevel`); custom severities can be constructed via `CustomLevel(n)` (an
-alias for `MessageLevel(n)`).
+`ErrorLevel`); custom severities can be constructed by calling
+`MessageLevel(n)` directly with any integer.
 
 ```@docs
 MessageLevel
@@ -58,11 +58,8 @@ ErrorLevel
 
 ## Custom Message Levels
 
-```@docs
-CustomLevel
-```
-
-Custom levels provide flexibility for specialized use cases where the standard Info/Warn/Error hierarchy isn't sufficient.
+For specialized use cases, you can construct a `MessageLevel` directly with any
+integer. This provides flexibility beyond the standard Info/Warn/Error hierarchy.
 
 ## Usage Examples
 
@@ -77,8 +74,8 @@ error_level = ErrorLevel
 silent_level = Silent
 
 # Custom levels for specialized needs
-trace_level = CustomLevel(-500)     # Low priority debugging
-critical_level = CustomLevel(2000)  # Higher than standard error level
+trace_level = MessageLevel(-500)     # Low priority debugging
+critical_level = MessageLevel(2000)  # Higher than standard error level
 ```
 
 ## Level Hierarchy
@@ -89,6 +86,6 @@ The message levels have a natural hierarchy that affects logging behavior:
 - `InfoLevel`: Low priority for general information
 - `WarnLevel`: Medium priority
 - `ErrorLevel`: Highest standard priority
-- `CustomLevel(n)`: Priority determined by integer value `n`
+- `MessageLevel(n)`: Priority determined by integer value `n`
 
 Higher priority messages are more likely to be displayed by logging systems, while lower priority messages may be filtered out depending on the logger configuration.

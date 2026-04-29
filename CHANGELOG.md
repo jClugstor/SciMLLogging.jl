@@ -10,11 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking
 
 - **`MessageLevel` is now a concrete struct**, no longer an abstract type with
-  per-level subtypes. `Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`,
-  `ErrorLevel`, and `CustomLevel` are now `MessageLevel` constants (or, for
-  `CustomLevel`, a constructor alias). The `AbstractMessageLevel` name has been
-  removed — code referring to it must be updated to use `MessageLevel`.
-  - `Silent`, `InfoLevel`, etc. still work — calling a `MessageLevel`
+  per-level subtypes. `Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`, and
+  `ErrorLevel` are now `MessageLevel` constants. Custom levels are constructed
+  by calling `MessageLevel(n)` directly. The `AbstractMessageLevel` and
+  `CustomLevel` names have been removed — code referring to them must be
+  updated to use `MessageLevel`.
+  - `Silent()`, `InfoLevel()`, etc. still work — calling a `MessageLevel`
     instance returns itself, so existing call-site syntax is unaffected.
   - Code that dispatched on the old subtypes (e.g. `f(::WarnLevel)`) needs to
     be rewritten to compare values (`level == WarnLevel`).

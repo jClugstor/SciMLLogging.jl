@@ -247,8 +247,8 @@ end
 
     # Custom levels
 
-    verbosity_to_int(CustomLevel(10)) # Returns 10
-    verbosity_to_int(CustomLevel(-5)) # Returns -5
+    verbosity_to_int(MessageLevel(10)) # Returns 10
+    verbosity_to_int(MessageLevel(-5)) # Returns -5
     ```
 """
 function verbosity_to_int(verb::MessageLevel)
@@ -278,7 +278,7 @@ end
     verbosity_to_bool(InfoLevel)     # Returns true
     verbosity_to_bool(WarnLevel)     # Returns true
     verbosity_to_bool(ErrorLevel)    # Returns true
-    verbosity_to_bool(CustomLevel(5))  # Returns true
+    verbosity_to_bool(MessageLevel(5))  # Returns true
     ```
 
 """

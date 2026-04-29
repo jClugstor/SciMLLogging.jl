@@ -49,7 +49,7 @@ result = solve(problem, verbose = custom_verbose)
 - `InfoLevel`: Informational messages
 - `WarnLevel`: Warning messages
 - `ErrorLevel`: Error messages
-- `CustomLevel(n)`: Custom level with integer value
+- `MessageLevel(n)`: Custom level with integer value
 
 ## Logging Backends
 

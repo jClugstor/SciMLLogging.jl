@@ -59,7 +59,7 @@ result = solve(problem, verbose = verbose_settings)
 - `InfoLevel`: Informational messages
 - `WarnLevel`: Warning messages
 - `ErrorLevel`: Error messages
-- `CustomLevel(n)`: Custom level with integer value `n`
+- `MessageLevel(n)`: Custom level with integer value `n`
 
 ## Complete Working Example
 

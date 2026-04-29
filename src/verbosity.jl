@@ -46,14 +46,6 @@ Error log level. Corresponds to `Logging.Error` when using the Logging backend.
 """
 const ErrorLevel = MessageLevel(4)
 
-"""
-    CustomLevel(n::Int)
-
-Construct a custom log level with integer value `n`. Corresponds to `Logging.LogLevel(n)`
-when using the Logging backend.
-"""
-const CustomLevel = MessageLevel
-
 # Allow calling level constants with no args for backward compatibility: Silent(), InfoLevel(), etc.
 (m::MessageLevel)() = m
 
