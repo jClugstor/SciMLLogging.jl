@@ -12,21 +12,21 @@ struct TestVerbosity{Enabled} <: AbstractVerbositySpecifier{Enabled}
 end
 
 function TestVerbosity(;
-        test1 = WarnLevel(),
-        test2 = InfoLevel(),
-        test3 = ErrorLevel(),
-        test4 = Silent()
+        test1 = WarnLevel,
+        test2 = InfoLevel,
+        test3 = ErrorLevel,
+        test4 = Silent
     )
     return TestVerbosity{true}(test1, test2, test3, test4)
 end
 
 function TestVerbosity(preset::AbstractVerbosityPreset)
     return if preset isa SciMLLogging.None
-        TestVerbosity{false}(Silent(), Silent(), Silent(), Silent())
+        TestVerbosity{false}(Silent, Silent, Silent, Silent)
     elseif preset isa SciMLLogging.All
-        TestVerbosity{true}(InfoLevel(), InfoLevel(), InfoLevel(), InfoLevel())
+        TestVerbosity{true}(InfoLevel, InfoLevel, InfoLevel, InfoLevel)
     elseif preset isa Minimal
-        TestVerbosity{true}(ErrorLevel(), Silent(), ErrorLevel(), Silent())
+        TestVerbosity{true}(ErrorLevel, Silent, ErrorLevel, Silent)
     else
         TestVerbosity()
     end
@@ -78,10 +78,10 @@ end
 
 @testset "Disabled verbosity" begin
     verbose_off = TestVerbosity(
-        test1 = Silent(),
-        test2 = Silent(),
-        test3 = Silent(),
-        test4 = Silent()
+        test1 = Silent,
+        test2 = Silent,
+        test3 = Silent,
+        test4 = Silent
     )
 
     # Should not log anything when all categories are silent
@@ -182,7 +182,7 @@ end
     )
 
     # Test that silent still skips emission even with varargs
-    verbose_silent = TestVerbosity(test1 = Silent())
+    verbose_silent = TestVerbosity(test1 = Silent)
     @test_logs min_level = Logging.Debug @SciMLMessage(
         "Should not appear", verbose_silent, :test1, x, y
     )

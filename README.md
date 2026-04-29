@@ -30,16 +30,16 @@ using SciMLLogging
 
     presets = (
         None = (
-            algorithm_choice   = Silent(),
-            iteration_progress = Silent(),
+            algorithm_choice   = Silent,
+            iteration_progress = Silent,
         ),
         Standard = (
-            algorithm_choice   = WarnLevel(),
-            iteration_progress = InfoLevel(),
+            algorithm_choice   = WarnLevel,
+            iteration_progress = InfoLevel,
         ),
         All = (
-            algorithm_choice   = InfoLevel(),
-            iteration_progress = InfoLevel(),
+            algorithm_choice   = InfoLevel,
+            iteration_progress = InfoLevel,
         ),
     )
 
@@ -53,7 +53,7 @@ verbose = MyVerbosity()
 verbose = MyVerbosity(Standard())
 
 # Or override individual toggles
-verbose = MyVerbosity(algorithm_choice = ErrorLevel())
+verbose = MyVerbosity(algorithm_choice = ErrorLevel)
 
 # Log messages at different levels
 @SciMLMessage("Selected algorithm: GMRES", verbose, :algorithm_choice)
@@ -74,11 +74,11 @@ end
 SciMLLogging defines a single concrete `MessageLevel` type with the following
 standard severities:
 
-  - `Silent()`: No output
-  - `DebugLevel()`: Debug messages
-  - `InfoLevel()`: Informational messages
-  - `WarnLevel()`: Warning messages
-  - `ErrorLevel()`: Error messages
+  - `Silent`: No output
+  - `DebugLevel`: Debug messages
+  - `InfoLevel`: Informational messages
+  - `WarnLevel`: Warning messages
+  - `ErrorLevel`: Error messages
   - `CustomLevel(n)`: Custom level with integer value `n`
 
 # Verbosity Presets
@@ -110,8 +110,8 @@ downstream API.
 
     presets = (
         Standard = (
-            dt_select        = InfoLevel(),
-            step_rejected    = WarnLevel(),
+            dt_select        = InfoLevel,
+            step_rejected    = WarnLevel,
             linear_verbosity = Standard(),  # preset value, deferred to the
                                             # downstream package, OR a
                                             # concrete sub-spec instance
@@ -145,17 +145,17 @@ end
 
 # Default kwarg constructor — produces an enabled instance
 function MyAppVerbosity(;
-        solver_iterations  = InfoLevel(),
-        solver_convergence = WarnLevel(),
-        performance_timing = Silent(),
-        performance_memory = Silent()
+        solver_iterations  = InfoLevel,
+        solver_convergence = WarnLevel,
+        performance_timing = Silent,
+        performance_memory = Silent
 )
     MyAppVerbosity{true}(solver_iterations, solver_convergence, performance_timing, performance_memory)
 end
 
 # Preset constructor — None() returns {false} for the compile-time short-circuit
 function MyAppVerbosity(::SciMLLogging.None)
-    MyAppVerbosity{false}(Silent(), Silent(), Silent(), Silent())
+    MyAppVerbosity{false}(Silent, Silent, Silent, Silent)
 end
 ```
 
@@ -184,15 +184,15 @@ end
 
 # Disabling Verbosity
 
-To disable specific message categories, set them to `Silent()`. To disable an
+To disable specific message categories, set them to `Silent`. To disable an
 entire specifier (with zero runtime cost via the `{Enabled}` short-circuit),
 construct it with the `None()` preset:
 
 ```julia
 # Per-toggle silencing — emits nothing for these toggles, but the rest still emit
 quiet = MyVerbosity(
-    algorithm_choice   = Silent(),
-    iteration_progress = Silent()
+    algorithm_choice   = Silent,
+    iteration_progress = Silent
 )
 
 # Whole-specifier disable — compile-time short-circuit at every call site

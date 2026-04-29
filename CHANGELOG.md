@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ErrorLevel`, and `CustomLevel` are now `MessageLevel` constants (or, for
   `CustomLevel`, a constructor alias). The `AbstractMessageLevel` name has been
   removed — code referring to it must be updated to use `MessageLevel`.
-  - `Silent()`, `InfoLevel()`, etc. still work — calling a `MessageLevel`
+  - `Silent`, `InfoLevel`, etc. still work — calling a `MessageLevel`
     instance returns itself, so existing call-site syntax is unaffected.
   - Code that dispatched on the old subtypes (e.g. `f(::WarnLevel)`) needs to
     be rewritten to compare values (`level == WarnLevel`).
@@ -57,8 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       sub_specifiers = (:nonlinear_verbosity, :linear_verbosity)
       presets = (
           Standard = (
-              dt_select           = InfoLevel(),
-              step_rejected       = WarnLevel(),
+              dt_select           = InfoLevel,
+              step_rejected       = WarnLevel,
               nonlinear_verbosity = Standard(),       # preset OR
               linear_verbosity    = LinearVerbosity(), # sub-spec instance
           ),
@@ -98,8 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   end
 
   # Plus a preset constructor per declared preset (None ⇒ {false}, others ⇒ {true}):
-  DEVerbosity(::Standard) = DEVerbosity{true}(InfoLevel(), WarnLevel(), Standard(), LinearVerbosity())
-  DEVerbosity(::None)     = DEVerbosity{false}(Silent(),    Silent(),    None(),     None())
+  DEVerbosity(::Standard) = DEVerbosity{true}(InfoLevel, WarnLevel, Standard(), LinearVerbosity())
+  DEVerbosity(::None)     = DEVerbosity{false}(Silent,    Silent,    None(),     None())
   # ...
 
   # Plus the keyword constructor with `preset=`, group kwargs, and field kwargs.

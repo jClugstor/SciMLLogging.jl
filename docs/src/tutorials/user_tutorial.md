@@ -44,21 +44,21 @@ For more control, you can configure individual message categories:
 ```julia
 # Example: Customizing a solve's verbosity
 verbose_settings = SolverVerbosity(
-    initialization = InfoLevel(),      # Show startup messages
-    iterations = Silent(),             # Don't show each iteration
-    convergence = InfoLevel(),         # Show convergence information
-    error_control = WarnLevel()        # Show warnings related to error control of the solver
+    initialization = InfoLevel,      # Show startup messages
+    iterations = Silent,             # Don't show each iteration
+    convergence = InfoLevel,         # Show convergence information
+    error_control = WarnLevel        # Show warnings related to error control of the solver
 )
 
 result = solve(problem, verbose = verbose_settings)
 ```
 
 **Message Levels:**
-- `Silent()`: No output for this category
-- `DebugLevel()`: Lowest priority debug messages
-- `InfoLevel()`: Informational messages
-- `WarnLevel()`: Warning messages
-- `ErrorLevel()`: Error messages
+- `Silent`: No output for this category
+- `DebugLevel`: Lowest priority debug messages
+- `InfoLevel`: Informational messages
+- `WarnLevel`: Warning messages
+- `ErrorLevel`: Error messages
 - `CustomLevel(n)`: Custom level with integer value `n`
 
 ## Complete Working Example
@@ -82,26 +82,26 @@ end
 
 # Likewise the constructors would typically be implemented by a package
 function SolverVerbosity(;
-    initialization = InfoLevel(),
-    iterations = Silent(),
-    convergence = InfoLevel(),
-    linear_solve = Silent(),
-    warnings = WarnLevel()
+    initialization = InfoLevel,
+    iterations = Silent,
+    convergence = InfoLevel,
+    linear_solve = Silent,
+    warnings = WarnLevel
     )
     SolverVerbosity{true}(initialization, iterations, convergence, linear_solve, warnings)
 end
 
 # 2. Implement preset support. None() returns a {false} instance — disabled at the type level.
 function SolverVerbosity(::None)
-    SolverVerbosity{false}(Silent(), Silent(), Silent(), Silent(), Silent())
+    SolverVerbosity{false}(Silent, Silent, Silent, Silent, Silent)
 end
 
 function SolverVerbosity(::Standard)
-    SolverVerbosity{true}(InfoLevel(), Silent(), InfoLevel(), Silent(), WarnLevel())
+    SolverVerbosity{true}(InfoLevel, Silent, InfoLevel, Silent, WarnLevel)
 end
 
 function SolverVerbosity(::All)
-    SolverVerbosity{true}(InfoLevel(), InfoLevel(), InfoLevel(), InfoLevel(), WarnLevel())
+    SolverVerbosity{true}(InfoLevel, InfoLevel, InfoLevel, InfoLevel, WarnLevel)
 end
 
 # 3. Example solver function using SciMLLogging, the specific messages and where the messages are emitted
@@ -145,11 +145,11 @@ result3 = example_solver(problem, verbose = SolverVerbosity(None()))
 
 println("\n=== With custom verbosity ===")
 custom_verbose = SolverVerbosity(
-    initialization = InfoLevel(),
-    iterations = Silent(),
-    convergence = InfoLevel(),
-    linear_solve = InfoLevel(),
-    warnings = ErrorLevel()  # Treat warnings as errors for this run
+    initialization = InfoLevel,
+    iterations = Silent,
+    convergence = InfoLevel,
+    linear_solve = InfoLevel,
+    warnings = ErrorLevel  # Treat warnings as errors for this run
 )
 result4 = example_solver(problem, verbose = custom_verbose)
 ```

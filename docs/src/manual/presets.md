@@ -73,11 +73,11 @@ matching constructor automatically:
     presets = (
         # ... standard presets ...
         DebuggingPreset = (
-            initialization = InfoLevel(),
-            progress       = DebugLevel(),  # Extra detailed progress
-            convergence    = InfoLevel(),
-            warnings       = WarnLevel(),
-            errors         = ErrorLevel(),
+            initialization = InfoLevel,
+            progress       = DebugLevel,  # Extra detailed progress
+            convergence    = InfoLevel,
+            warnings       = WarnLevel,
+            errors         = ErrorLevel,
         ),
     )
 
@@ -93,11 +93,11 @@ struct DebuggingPreset <: AbstractVerbosityPreset end
 
 function MyPackageVerbosity(::DebuggingPreset)
     MyPackageVerbosity(
-        initialization = InfoLevel(),
-        progress       = DebugLevel(),
-        convergence    = InfoLevel(),
-        warnings       = WarnLevel(),
-        errors         = ErrorLevel(),
+        initialization = InfoLevel,
+        progress       = DebugLevel,
+        convergence    = InfoLevel,
+        warnings       = WarnLevel,
+        errors         = ErrorLevel,
     )
 end
 ```
@@ -125,11 +125,11 @@ verbosity = SolverVerbosity(Standard())
 
 # ...might be equivalent to this manual configuration:
 verbosity = SolverVerbosity(
-    initialization = InfoLevel(),
-    progress = Silent(),
-    convergence = InfoLevel(),
-    diagnostics = WarnLevel(),
-    performance = InfoLevel()
+    initialization = InfoLevel,
+    progress = Silent,
+    convergence = InfoLevel,
+    diagnostics = WarnLevel,
+    performance = InfoLevel
 )
 ```
 

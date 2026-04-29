@@ -57,8 +57,8 @@ given, the struct is just `name{Enabled}`.
 
     presets = (
         Standard = (
-            convergence      = InfoLevel(),
-            step_rejected    = WarnLevel(),
+            convergence      = InfoLevel,
+            step_rejected    = WarnLevel,
             linear_verbosity = LinearVerbosity(None()),
         ),
     )

@@ -53,25 +53,25 @@ using SciMLLogging
 
     presets = (
         None = (
-            initialization   = Silent(),
-            iterations       = Silent(),
-            convergence      = Silent(),
-            warnings         = Silent(),
+            initialization   = Silent,
+            iterations       = Silent,
+            convergence      = Silent,
+            warnings         = Silent,
             linear_verbosity = None(),
         ),
         Standard = (
-            initialization   = InfoLevel(),
-            iterations       = Silent(),
-            convergence      = InfoLevel(),
-            warnings         = WarnLevel(),
+            initialization   = InfoLevel,
+            iterations       = Silent,
+            convergence      = InfoLevel,
+            warnings         = WarnLevel,
             linear_verbosity = Standard(),  # preset value, deferred to
                                             # the downstream package
         ),
         All = (
-            initialization   = InfoLevel(),
-            iterations       = InfoLevel(),
-            convergence      = InfoLevel(),
-            warnings         = WarnLevel(),
+            initialization   = InfoLevel,
+            iterations       = InfoLevel,
+            convergence      = InfoLevel,
+            warnings         = WarnLevel,
             linear_verbosity = All(),
         ),
     )
@@ -119,10 +119,10 @@ end
 
 # Constructor with defaults — produces an enabled instance
 function MySolverVerbosity(;
-        initialization = InfoLevel(),
-        iterations = Silent(),
-        convergence = InfoLevel(),
-        warnings = WarnLevel()
+        initialization = InfoLevel,
+        iterations = Silent,
+        convergence = InfoLevel,
+        warnings = WarnLevel
 )
     MySolverVerbosity{true}(initialization, iterations, convergence, warnings)
 end
@@ -144,11 +144,11 @@ configurations:
 # the type parameter signals "disabled" so logging calls compile away.
 function MySolverVerbosity(preset::AbstractVerbosityPreset)
     if preset isa None
-        MySolverVerbosity{false}(Silent(), Silent(), Silent(), Silent())
+        MySolverVerbosity{false}(Silent, Silent, Silent, Silent)
     elseif preset isa All
-        MySolverVerbosity{true}(InfoLevel(), InfoLevel(), InfoLevel(), WarnLevel())
+        MySolverVerbosity{true}(InfoLevel, InfoLevel, InfoLevel, WarnLevel)
     elseif preset isa Minimal
-        MySolverVerbosity{true}(Silent(), Silent(), ErrorLevel(), ErrorLevel())
+        MySolverVerbosity{true}(Silent, Silent, ErrorLevel, ErrorLevel)
     else
         MySolverVerbosity()  # Default
     end
@@ -197,10 +197,10 @@ Provide clear documentation for your users:
 Controls verbosity output from MySolver functions.
 
 # Keyword Arguments
-- `initialization = InfoLevel()`: Messages about solver setup
-- `iterations = Silent()`: Per-iteration progress messages
-- `convergence = InfoLevel()`: Convergence/failure notifications
-- `error_control = WarnLevel()`: Messages about solver error control
+- `initialization = InfoLevel`: Messages about solver setup
+- `iterations = Silent`: Per-iteration progress messages
+- `convergence = InfoLevel`: Convergence/failure notifications
+- `error_control = WarnLevel`: Messages about solver error control
 
 # Constructors
 - `MySolverVerbosity()`: Default enabled verbosity
@@ -214,14 +214,14 @@ Controls verbosity output from MySolver functions.
 verbose = MySolverVerbosity()
 
 # Custom verbosity - show everything except iterations
-verbose = MySolverVerbosity(iterations = Silent())
+verbose = MySolverVerbosity(iterations = Silent)
 
 # Silent mode
 verbose = MySolverVerbosity(
-    initialization = Silent(),
-    iterations = Silent(),
-    convergence = Silent(),
-    warnings = Silent()
+    initialization = Silent,
+    iterations = Silent,
+    convergence = Silent,
+    warnings = Silent
 )
 ```
 """
@@ -240,7 +240,7 @@ struct ExampleVerbosity{Enabled} <: AbstractVerbositySpecifier{Enabled}
 end
 
 # Constructor with default — produces an enabled instance
-ExampleVerbosity(; progress = InfoLevel()) = ExampleVerbosity{true}(progress)
+ExampleVerbosity(; progress = InfoLevel) = ExampleVerbosity{true}(progress)
 
 function solve_example(n::Int, verbose::ExampleVerbosity)
     result = 0

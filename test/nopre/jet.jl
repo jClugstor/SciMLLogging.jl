@@ -10,14 +10,14 @@ using Test
 
     presets = (
         None = (
-            a = Silent(),
-            b = Silent(),
-            c = Silent(),
+            a = Silent,
+            b = Silent,
+            c = Silent,
         ),
         Standard = (
-            a = WarnLevel(),
-            b = InfoLevel(),
-            c = ErrorLevel(),
+            a = WarnLevel,
+            b = InfoLevel,
+            c = ErrorLevel,
         ),
     )
 

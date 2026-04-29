@@ -50,11 +50,11 @@ Each field in a verbosity specifier can be set to any `MessageLevel`:
 ```julia
 # Create a custom configuration
 custom_verbosity = MyPackageVerbosity(
-    initialization = InfoLevel(),     # Show startup information
-    progress = Silent(),             # Hide progress updates
-    convergence = InfoLevel(),        # Show convergence status
-    diagnostics = WarnLevel(),       # Show diagnostic messages
-    performance = InfoLevel()        # Show performance info
+    initialization = InfoLevel,     # Show startup information
+    progress = Silent,             # Hide progress updates
+    convergence = InfoLevel,        # Show convergence status
+    diagnostics = WarnLevel,       # Show diagnostic messages
+    performance = InfoLevel        # Show performance info
 )
 ```
 

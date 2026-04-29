@@ -121,7 +121,7 @@ To emit a simple string, `@SciMLMessage("message", verbosity, :option)` will emi
 
 `@SciMLMessage` can also be used to emit a log message coming from the evaluation of a 0-argument function. This function is resolved in the environment of the macro call.
 Therefore it can use variables from the surrounding environment. This may be useful if the log message writer wishes to carry out some calculations using existing variables
-and use them in the log message. The function is only called if the message category is not `Silent()`, avoiding unnecessary computation.
+and use them in the log message. The function is only called if the message category is not `Silent`, avoiding unnecessary computation.
 
 The macro works with any `AbstractVerbositySpecifier` implementation:
 
@@ -159,8 +159,8 @@ end
 Alternatively, the macro also accepts a boolean value for `verb`:
 
 When `verb` is a boolean:
-- `true` will emit the message at `WarnLevel()`
-- `false` will suppress the message (equivalent to `Silent()`)
+- `true` will emit the message at `WarnLevel`
+- `false` will suppress the message (equivalent to `Silent`)
 
 The two-argument form `@SciMLMessage(message, verbosity)` can be used when `verbosity` is a `Bool`:
 
@@ -239,11 +239,11 @@ end
 
     # Standard levels
 
-    verbosity_to_int(Silent())        # Returns 0
-    verbosity_to_int(DebugLevel())    # Returns 1
-    verbosity_to_int(InfoLevel())     # Returns 2
-    verbosity_to_int(WarnLevel())     # Returns 3
-    verbosity_to_int(ErrorLevel())    # Returns 4
+    verbosity_to_int(Silent)        # Returns 0
+    verbosity_to_int(DebugLevel)    # Returns 1
+    verbosity_to_int(InfoLevel)     # Returns 2
+    verbosity_to_int(WarnLevel)     # Returns 3
+    verbosity_to_int(ErrorLevel)    # Returns 4
 
     # Custom levels
 
@@ -272,12 +272,12 @@ end
     using SciMLLogging
 
     # Silent returns false
-    verbosity_to_bool(Silent())        # Returns false
+    verbosity_to_bool(Silent)        # Returns false
 
     # All other levels return true
-    verbosity_to_bool(InfoLevel())     # Returns true
-    verbosity_to_bool(WarnLevel())     # Returns true
-    verbosity_to_bool(ErrorLevel())    # Returns true
+    verbosity_to_bool(InfoLevel)     # Returns true
+    verbosity_to_bool(WarnLevel)     # Returns true
+    verbosity_to_bool(ErrorLevel)    # Returns true
     verbosity_to_bool(CustomLevel(5))  # Returns true
     ```
 
