@@ -11,8 +11,10 @@ abstract type AbstractVerbositySpecifier{Enabled} end
 
 # Utilities
 
-@inline function logging_message_level(m::MessageLevel)
-    m == Silent     && return nothing
+# Convert a MessageLevel to a Julia Logging.LogLevel. Used only by the
+# Logging backend at the point where we actually hand off to Julia's logging
+# system — other backends (core, tracy) consume the MessageLevel directly.
+@inline function to_loglevel(m::MessageLevel)
     m == DebugLevel && return Logging.Debug
     m == InfoLevel  && return Logging.Info
     m == WarnLevel  && return Logging.Warn
@@ -20,11 +22,8 @@ abstract type AbstractVerbositySpecifier{Enabled} end
     return Logging.LogLevel(m.level)
 end
 
-logging_message_level(::AbstractVerbosityPreset) = nothing
-logging_message_level(::AbstractVerbositySpecifier) = nothing
-
 function emit_message(
-        f::Function, level, option, file, line,
+        f::Function, level::MessageLevel, option, file, line,
         _module; kwargs...
     )
     message = f()
@@ -34,17 +33,17 @@ function emit_message(
     elseif LOGGING_BACKEND == "tracy"
         emit_tracy_message(msg, level, file, line, _module)
     else
-        _emit_log(level, msg, _module, file, line; kwargs...)
+        _emit_log(to_loglevel(level), msg, _module, file, line; kwargs...)
     end
 
-    return if level == Logging.Error
+    return if level == ErrorLevel
         throw(ErrorException(msg))
     end
 end
 
 function emit_message(
         message::AbstractString,
-        level, option, file, line, _module; kwargs...
+        level::MessageLevel, option, file, line, _module; kwargs...
     )
 
     msg = "Verbosity toggle: $option \n $message"
@@ -53,10 +52,10 @@ function emit_message(
     elseif LOGGING_BACKEND == "tracy"
         emit_tracy_message(msg, level, file, line, _module)
     else
-        _emit_log(level, msg, _module, file, line; kwargs...)
+        _emit_log(to_loglevel(level), msg, _module, file, line; kwargs...)
     end
 
-    return if level == Logging.Error
+    return if level == ErrorLevel
         throw(ErrorException(msg))
     end
 end
@@ -99,11 +98,14 @@ end
 end
 
 @inline function get_message_level(verb::AbstractVerbositySpecifier{true}, option)
-    return logging_message_level(getproperty(verb, option))
+    m = getproperty(verb, option)
+    # Toggle access returns a MessageLevel (Silent → no emission). Sub-specifier
+    # access returns a spec/preset, which doesn't make sense here — treat as no-op.
+    return m isa MessageLevel && m != Silent ? m : nothing
 end
 
 @inline function get_message_level(verb::Bool, _)
-    return verb ? logging_message_level(WarnLevel) : nothing
+    return verb ? WarnLevel : nothing
 end
 
 
