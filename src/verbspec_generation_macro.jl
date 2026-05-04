@@ -60,7 +60,7 @@ macro verbosity_specifier(name, block)
                 if lhs == :toggles
                     toggles_expr = rhs
                 elseif lhs == :sub_specifiers
-                    # Forward-compat alias accepted in 1.9 — treated as additional
+                    # Forward-compat alias accepted in 1.10 — treated as additional
                     # toggles. SciMLLogging 2.0 gives sub_specifiers their own
                     # parametric typing for inference; in 1.x they share the
                     # toggles' wide Union field type.

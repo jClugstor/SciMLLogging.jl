@@ -95,7 +95,7 @@ constant where one exists (`Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`,
 This constructor is provided for forward-compatibility with SciMLLogging 2.0,
 where `MessageLevel` is the canonical concrete level type and the per-severity
 names are constants of that type. Code that uses `MessageLevel(n)` works
-identically on both 1.9+ and 2.0.
+identically on both 1.10+ and 2.0.
 """
 function MessageLevel(n::Int)
     n == 0 && return Silent()
