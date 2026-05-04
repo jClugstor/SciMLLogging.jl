@@ -1,5 +1,5 @@
-# Tests for the forward-compatibility surface added in 1.9. These exercise
-# new APIs that exist in both 1.9+ and 2.0, so downstream packages can target
+# Tests for the forward-compatibility surface added in 1.10. These exercise
+# new APIs that exist in both 1.10+ and 2.0, so downstream packages can target
 # either version with the same source code.
 
 using SciMLLogging

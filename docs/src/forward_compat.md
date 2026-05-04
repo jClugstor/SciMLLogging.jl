@@ -1,11 +1,11 @@
-# Writing Code That Works on Both SciMLLogging 1.9+ and 2.0
+# Writing Code That Works on Both SciMLLogging 1.10+ and 2.0
 
 SciMLLogging 2.0 is a breaking release. To make the rollout across the SciML
-ecosystem smooth, SciMLLogging 1.9 forward-ports the parts of the 2.0 API that
-can be backported. If downstream packages follow the rules below, the same
-source code compiles and runs identically on both 1.9 and 2.0 — so each
-package can bump `[compat] SciMLLogging = "1.9, 2"` and migrate ahead of the
-2.0 release without any code changes when 2.0 actually ships.
+ecosystem smooth, SciMLLogging 1.10 forward-ports the parts of the 2.0 API
+that can be backported. If downstream packages follow the rules below, the
+same source code compiles and runs identically on both 1.10 and 2.0 — so
+each package can bump `[compat] SciMLLogging = "1.10, 2"` and migrate ahead
+of the 2.0 release without any code changes when 2.0 actually ships.
 
 ## Compatibility checklist
 
@@ -34,12 +34,12 @@ following. Each rule is concrete; the rest of this page shows examples.
 | Rule | What changed in 2.0 | Why this rule fixes it |
 |---|---|---|
 | 1 | `AbstractVerbositySpecifier` becomes parametric `{Enabled}`. Hand-written subtypes need an `{Enabled}` parameter. | The macro generates the parametric subtype for you, transparently. |
-| 2 | Sub-specifier fields get their own type parameter for inference. | The `sub_specifiers` keyword exists on 1.9 (no-op) and on 2.0 (parametric). |
+| 2 | Sub-specifier fields get their own type parameter for inference. | The `sub_specifiers` keyword exists on 1.10 (no-op) and on 2.0 (parametric). |
 | 3 | `Silent`, `InfoLevel`, etc. are types in 1.x and constants in 2.0. The call form `Silent()` resolves correctly in both. | Bare `Silent` means the type in 1.x but the value in 2.0 — different things. The call form is the same value in both. |
-| 4 | `CustomLevel` is removed in 2.0; `MessageLevel(n)` is the canonical custom-level constructor. The 1.9 version of `MessageLevel(n)` is provided as a smart constructor that returns the matching standard subtype where possible, otherwise `CustomLevel(n)`. | Both versions accept `MessageLevel(n)`. |
+| 4 | `CustomLevel` is removed in 2.0; `MessageLevel(n)` is the canonical custom-level constructor. The 1.10 version of `MessageLevel(n)` is provided as a smart constructor that returns the matching standard subtype where possible, otherwise `CustomLevel(n)`. | Both versions accept `MessageLevel(n)`. |
 | 5 | Both names are removed in 2.0. | Avoid them. |
 | 6 | Toggle field types differ: 1.x uses a wide Union; 2.0 uses concrete `MessageLevel`. Sub-specifier fields are typed differently across versions too. | Treat the struct as opaque — never check `fieldtype` or pattern-match on field types. |
-| 7 | `AbstractVerbositySpecifier{Enabled}` only exists in 2.0. The `is_enabled(verb)` helper exists on 1.9 (always returns `true`) and on 2.0 (returns `false` for `None()` instances). | Portable disabled-path branch. |
+| 7 | `AbstractVerbositySpecifier{Enabled}` only exists in 2.0. The `is_enabled(verb)` helper exists on 1.10 (always returns `true`) and on 2.0 (returns `false` for `None()` instances). | Portable disabled-path branch. |
 | 8 | The `sub_specifiers` slot can hold either a sub-spec or a preset, so consumers of those slots see both shapes. | Functions accepting `verbose=` should already handle both via the macro-generated preset constructor. |
 
 ## Examples
@@ -55,7 +55,7 @@ using SciMLLogging
     toggles = (:initialization, :iterations, :convergence, :warnings)
 
     # If your spec carries another verbosity (e.g. a linear-solve verbosity),
-    # declare it here instead of in `toggles`. On 1.9 this is a no-op alias for
+    # declare it here instead of in `toggles`. On 1.10 this is a no-op alias for
     # toggles; on 2.0 each entry gets its own concrete type parameter for
     # inference.
     sub_specifiers = (:linear_verbosity,)
@@ -189,7 +189,7 @@ Once a downstream package has adopted the rules above, set:
 
 ```toml
 [compat]
-SciMLLogging = "1.9, 2"
+SciMLLogging = "1.10, 2"
 ```
 
 This lets the package work with anyone resolving against either major
