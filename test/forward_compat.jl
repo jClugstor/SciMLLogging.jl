@@ -9,6 +9,91 @@ using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, AbstractVerbosityP
     @verbosity_specifier, @SciMLMessage, is_enabled
 using Test
 
+# ---------------------------------------------------------------------------
+# Specifiers must be defined at module top level — the macro emits a `const`
+# preset map that isn't allowed inside a @testset (which is local scope).
+# ---------------------------------------------------------------------------
+
+@verbosity_specifier MLConstructorTest begin
+    toggles = (:a, :b)
+    presets = (
+        None     = (a = Silent(),     b = Silent()),
+        Minimal  = (a = Silent(),     b = Silent()),
+        Standard = (a = InfoLevel(),  b = WarnLevel()),
+        Detailed = (a = DebugLevel(), b = InfoLevel()),
+        All      = (a = DebugLevel(), b = DebugLevel()),
+    )
+    groups = ()
+end
+
+@verbosity_specifier IsEnabledTest begin
+    toggles = (:x,)
+    presets = (
+        None     = (x = Silent(),),
+        Standard = (x = InfoLevel(),),
+    )
+    groups = ()
+end
+
+@verbosity_specifier OuterSpecForwardCompat begin
+    toggles        = (:outer_a, :outer_b)
+    sub_specifiers = (:inner,)
+
+    presets = (
+        None = (
+            outer_a = Silent(),
+            outer_b = Silent(),
+            inner   = None(),
+        ),
+        Minimal = (
+            outer_a = WarnLevel(),
+            outer_b = Silent(),
+            inner   = Minimal(),
+        ),
+        Standard = (
+            outer_a = InfoLevel(),
+            outer_b = WarnLevel(),
+            inner   = Standard(),
+        ),
+        Detailed = (
+            outer_a = DebugLevel(),
+            outer_b = InfoLevel(),
+            inner   = Detailed(),
+        ),
+        All = (
+            outer_a = DebugLevel(),
+            outer_b = DebugLevel(),
+            inner   = All(),
+        ),
+    )
+
+    groups = (
+        outer_group = (:outer_a, :outer_b),
+    )
+end
+
+@verbosity_specifier InnerForwardCompat begin
+    toggles = (:t,)
+    presets = (
+        None     = (t = Silent(),),
+        Standard = (t = InfoLevel(),),
+    )
+    groups = ()
+end
+
+@verbosity_specifier ToggleOnlyForwardCompat begin
+    toggles = (:t,)
+    presets = (
+        None     = (t = Silent(),),
+        Standard = (t = InfoLevel(),),
+    )
+    groups = ()
+end
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
 @testset "MessageLevel(n) returns standard constants for 0..4" begin
     @test MessageLevel(0) isa Silent
     @test MessageLevel(1) isa DebugLevel
@@ -25,33 +110,12 @@ end
 end
 
 @testset "MessageLevel result is usable in a verbosity specifier kwarg" begin
-    @verbosity_specifier MLConstructorTest begin
-        toggles = (:a, :b)
-        presets = (
-            None     = (a = Silent(),    b = Silent()),
-            Minimal  = (a = Silent(),    b = Silent()),
-            Standard = (a = InfoLevel(), b = WarnLevel()),
-            Detailed = (a = DebugLevel(), b = InfoLevel()),
-            All      = (a = DebugLevel(), b = DebugLevel()),
-        )
-        groups = ()
-    end
-
     v = MLConstructorTest(a = MessageLevel(2), b = MessageLevel(3))
     @test v.a isa InfoLevel
     @test v.b isa WarnLevel
 end
 
 @testset "is_enabled returns true for any 1.x verbosity specifier" begin
-    @verbosity_specifier IsEnabledTest begin
-        toggles = (:x,)
-        presets = (
-            None     = (x = Silent(),),
-            Standard = (x = InfoLevel(),),
-        )
-        groups = ()
-    end
-
     @test is_enabled(IsEnabledTest()) === true
     @test is_enabled(IsEnabledTest(None())) === true   # 1.x: always true
     # On 2.0, IsEnabledTest(None()) returns a {false} instance and is_enabled
@@ -60,43 +124,6 @@ end
 end
 
 @testset "sub_specifiers block is recognized and treated as additional toggles" begin
-    @verbosity_specifier OuterSpecForwardCompat begin
-        toggles        = (:outer_a, :outer_b)
-        sub_specifiers = (:inner,)
-
-        presets = (
-            None = (
-                outer_a = Silent(),
-                outer_b = Silent(),
-                inner   = None(),
-            ),
-            Minimal = (
-                outer_a = WarnLevel(),
-                outer_b = Silent(),
-                inner   = Minimal(),
-            ),
-            Standard = (
-                outer_a = InfoLevel(),
-                outer_b = WarnLevel(),
-                inner   = Standard(),
-            ),
-            Detailed = (
-                outer_a = DebugLevel(),
-                outer_b = InfoLevel(),
-                inner   = Detailed(),
-            ),
-            All = (
-                outer_a = DebugLevel(),
-                outer_b = DebugLevel(),
-                inner   = All(),
-            ),
-        )
-
-        groups = (
-            outer_group = (:outer_a, :outer_b),
-        )
-    end
-
     # Default (Standard preset)
     v = OuterSpecForwardCompat()
     @test v.outer_a isa InfoLevel
@@ -109,14 +136,6 @@ end
     @test v_min.inner   isa Minimal
 
     # Override the sub_specifier via kwarg with a sub-spec instance
-    @verbosity_specifier InnerForwardCompat begin
-        toggles = (:t,)
-        presets = (
-            None     = (t = Silent(),),
-            Standard = (t = InfoLevel(),),
-        )
-        groups = ()
-    end
     inner_inst = InnerForwardCompat()
     v2 = OuterSpecForwardCompat(inner = inner_inst)
     @test v2.inner === inner_inst
@@ -132,18 +151,9 @@ end
     @test v4.outer_b isa ErrorLevel
 end
 
-@testset "sub_specifiers without explicit declaration still works (none required)" begin
-    # Toggle-only spec — the new keyword being optional shouldn't change anything
-    @verbosity_specifier ToggleOnly begin
-        toggles = (:t,)
-        presets = (
-            None     = (t = Silent(),),
-            Standard = (t = InfoLevel(),),
-        )
-        groups = ()
-    end
-    @test ToggleOnly().t isa InfoLevel
-    @test ToggleOnly(None()).t isa Silent
+@testset "Toggle-only spec works as before (no sub_specifiers required)" begin
+    @test ToggleOnlyForwardCompat().t isa InfoLevel
+    @test ToggleOnlyForwardCompat(None()).t isa Silent
 end
 
 @testset "sub_specifiers must be a tuple if provided" begin
