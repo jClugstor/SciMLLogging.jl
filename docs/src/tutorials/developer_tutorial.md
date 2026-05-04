@@ -8,7 +8,7 @@ SciMLLogging.jl provides four main components for package developers:
 
 1. `AbstractVerbositySpecifier` - Base type for creating custom verbosity types
 2. `@SciMLMessage` - Macro for emitting conditional log messages
-3.  Log levels - Predefined log levels (`Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, or `MessageLevel(n)` for a custom integer). These are the fields of the `AbstractVerbositySpecifier`s that determine which messages get logged, and at what log level. 
+3.  Log levels - Predefined log levels (`Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`, `ErrorLevel`, `CustomLevel(n)`). These are the fields of the `AbstractVerbositySpecifier`s that determine which messages get logged, and at what log level. 
 4.  Verbosity preset levels - `None`, `Minimal`, `Standard`, `Detailed`, `All`. These represent predefined sets of log levels. 
 
 ### AbstractVerbositySpecifier
@@ -28,127 +28,60 @@ First, decide what aspects of your package should be controllable by users. For 
 
 ## Step 2: Create Your Verbosity Type
 
-There are two ways to define a verbosity specifier: the `@verbosity_specifier`
-macro (recommended for new code) or a manual struct definition (useful when you
-need full control).
-
-### Option A: Use the `@verbosity_specifier` macro
-
-The macro generates the parametric struct, all the constructors, preset
-support, group keyword arguments, and validation in one declaration:
+Define a struct that subtypes `AbstractVerbositySpecifier`:
 
 ```julia
 using SciMLLogging
+using ConcreteStructs: @concrete
 
-@verbosity_specifier MySolverVerbosity begin
-    # Toggles control individual message categories. Each toggle field is
-    # typed as `MessageLevel`.
-    toggles = (:initialization, :iterations, :convergence, :warnings)
-
-    # Optional. Sub-specifier fields hold either another verbosity specifier
-    # or a verbosity preset. Use this when your spec needs to configure
-    # nested behavior — e.g., a solver verbosity that controls the verbosity
-    # of an inner linear-solve step.
-    sub_specifiers = (:linear_verbosity,)
-
-    presets = (
-        None = (
-            initialization   = Silent,
-            iterations       = Silent,
-            convergence      = Silent,
-            warnings         = Silent,
-            linear_verbosity = None(),
-        ),
-        Standard = (
-            initialization   = InfoLevel,
-            iterations       = Silent,
-            convergence      = InfoLevel,
-            warnings         = WarnLevel,
-            linear_verbosity = Standard(),  # preset value, deferred to
-                                            # the downstream package
-        ),
-        All = (
-            initialization   = InfoLevel,
-            iterations       = InfoLevel,
-            convergence      = InfoLevel,
-            warnings         = WarnLevel,
-            linear_verbosity = All(),
-        ),
-    )
-
-    # Groups let users set multiple toggles at once via a single kwarg.
-    groups = (
-        solver = (:initialization, :iterations, :convergence),
-    )
-end
-```
-
-The macro generates:
-- `MySolverVerbosity{Enabled, S1}` — parametric on `Enabled` and one type
-  parameter per sub-specifier slot.
-- A preset constructor per preset name (`MySolverVerbosity(::None)`, etc.).
-- A keyword constructor with `preset=`, group kwargs (`solver=`), and field
-  kwargs, applying precedence: individual > group > preset.
-
-When a sub-specifier field is set to a concrete sub-spec instance (e.g.
-`LinearVerbosity(Detailed())`), the outer specifier's type parameter
-specializes to that concrete type — preserving inference into downstream
-APIs that consume the sub-spec.
-
-When the field holds a preset value (e.g. `Standard()`), the type parameter
-specializes to the preset's singleton type — also concrete. Downstream code
-that drills into the field can dispatch on whether it received a preset or
-a fully-configured sub-spec.
-
-### Option B: Define the struct manually
-
-Sometimes you need full control over the struct layout (e.g. when you have
-complex constructors, additional fields, or want to integrate with another
-type system). Define a parametric struct that subtypes
-`AbstractVerbositySpecifier{Enabled}`:
-
-```julia
-using SciMLLogging
-
-struct MySolverVerbosity{Enabled} <: AbstractVerbositySpecifier{Enabled}
-    initialization::MessageLevel
-    iterations::MessageLevel
-    convergence::MessageLevel
-    warnings::MessageLevel
+@concrete struct MySolverVerbosity <: AbstractVerbositySpecifier
+    initialization
+    iterations
+    convergence
+    warnings
 end
 
-# Constructor with defaults — produces an enabled instance
+# Constructor with defaults
 function MySolverVerbosity(;
-        initialization = InfoLevel,
-        iterations = Silent,
-        convergence = InfoLevel,
-        warnings = WarnLevel
+        initialization = InfoLevel(),
+        iterations = Silent(),
+        convergence = InfoLevel(),
+        warnings = WarnLevel()
 )
-    MySolverVerbosity{true}(initialization, iterations, convergence, warnings)
+    MySolverVerbosity(initialization, iterations, convergence, warnings)
 end
 ```
-- Concretely typing fields as `MessageLevel` lets the compiler constant-fold logging branches
-- The `{Enabled}` type parameter selects between two `get_message_level` methods at compile time
+- Use `@concrete` from ConcreteStructs.jl for better performance
 - Each field represents a category of messages your package can emit
 
-## Step 3: Add Convenience Constructors (manual path only)
+## Step 3: Add Convenience Constructors
 
-If you used the macro in Step 2, the preset constructors and keyword
-constructor are already generated — skip ahead to Step 4. For a manually
-defined specifier, add a preset-based constructor that maps each preset to a
-field configuration, and let the kwarg constructor from Step 2 handle ad-hoc
-configurations:
+Make it easy for users to create verbosity instances. Perhaps include a constructor that can take a AbstractVerbosityPreset, and use it to set the rest of the fields, and a constructor that takes all keyword arguments:
 
 ```julia
-# Preset-based constructor. Note that `None()` returns a {false} instance —
-# the type parameter signals "disabled" so logging calls compile away.
+# Preset-based constructor (optional)
 function MySolverVerbosity(preset::AbstractVerbosityPreset)
     if preset isa None
-        MySolverVerbosity{false}(Silent, Silent, Silent, Silent)
+        MySolverVerbosity(
+            initialization = Silent(),
+            iterations = Silent(),
+            convergence = Silent(),
+            warnings = Silent()
+        )
     elseif preset isa All
-        MySolverVerbosity{true}(InfoLevel, InfoLevel, InfoLevel, WarnLevel)
+        MySolverVerbosity(
+            initialization = InfoLevel(),
+            iterations = InfoLevel(),
+            convergence = InfoLevel(),
+            error_control = WarnLevel()
+        )
     elseif preset isa Minimal
-        MySolverVerbosity{true}(Silent, Silent, ErrorLevel, ErrorLevel)
+        MySolverVerbosity(
+            initialization = Silent(),
+            iterations = Silent(),
+            convergence = ErrorLevel(),
+            error_control = ErrorLevel()
+        )
     else
         MySolverVerbosity()  # Default
     end
@@ -197,10 +130,10 @@ Provide clear documentation for your users:
 Controls verbosity output from MySolver functions.
 
 # Keyword Arguments
-- `initialization = InfoLevel`: Messages about solver setup
-- `iterations = Silent`: Per-iteration progress messages
-- `convergence = InfoLevel`: Convergence/failure notifications
-- `error_control = WarnLevel`: Messages about solver error control
+- `initialization = InfoLevel()`: Messages about solver setup
+- `iterations = Silent()`: Per-iteration progress messages
+- `convergence = InfoLevel()`: Convergence/failure notifications
+- `error_control = WarnLevel()`: Messages about solver error control
 
 # Constructors
 - `MySolverVerbosity()`: Default enabled verbosity
@@ -214,14 +147,14 @@ Controls verbosity output from MySolver functions.
 verbose = MySolverVerbosity()
 
 # Custom verbosity - show everything except iterations
-verbose = MySolverVerbosity(iterations = Silent)
+verbose = MySolverVerbosity(iterations = Silent())
 
 # Silent mode
 verbose = MySolverVerbosity(
-    initialization = Silent,
-    iterations = Silent,
-    convergence = Silent,
-    warnings = Silent
+    initialization = Silent(),
+    iterations = Silent(),
+    convergence = Silent(),
+    warnings = Silent()
 )
 ```
 """
@@ -231,16 +164,17 @@ verbose = MySolverVerbosity(
 
 Here's a complete minimal example:
 
-```@example
+```@example 
 using SciMLLogging
-import SciMLLogging: AbstractVerbositySpecifier, MessageLevel
+using ConcreteStructs: @concrete
+import SciMLLogging: AbstractVerbositySpecifier
 
-struct ExampleVerbosity{Enabled} <: AbstractVerbositySpecifier{Enabled}
-    progress::MessageLevel
+@concrete struct ExampleVerbosity <: AbstractVerbositySpecifier
+    progress
 end
 
-# Constructor with default — produces an enabled instance
-ExampleVerbosity(; progress = InfoLevel) = ExampleVerbosity{true}(progress)
+# Constructor with default
+ExampleVerbosity(; progress = InfoLevel()) = ExampleVerbosity(progress)
 
 function solve_example(n::Int, verbose::ExampleVerbosity)
     result = 0

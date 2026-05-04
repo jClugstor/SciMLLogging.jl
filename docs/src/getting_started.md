@@ -6,7 +6,7 @@ This guide will help you get up and running with SciMLLogging.jl quickly. SciMLL
 
 SciMLLogging.jl is built around three core concepts:
 
-1. **Message Levels**: Define the importance of messages (`Silent`, `InfoLevel`, `WarnLevel`, `ErrorLevel`)
+1. **Message Levels**: Define the importance of messages (`Silent()`, `InfoLevel()`, `WarnLevel()`, `ErrorLevel()`)
 2. **Verbosity Specifiers**: Control which categories of messages are shown and at what level
 3. **Verbosity Presets**: Predefined settings for common use cases (`None()`, `Minimal()`, `Standard()`, `Detailed()`, `All()`)
 
@@ -34,22 +34,22 @@ For more control, packages typically allow you to configure individual message c
 ```julia
 # Custom configuration
 custom_verbose = MyPackageVerbosity(
-    startup = InfoLevel,      # Show startup messages
-    progress = Silent,        # Hide progress updates
-    diagnostics = WarnLevel,  # Show diagnostic warnings
-    performance = InfoLevel   # Show performance info
+    startup = InfoLevel(),      # Show startup messages
+    progress = Silent(),        # Hide progress updates
+    diagnostics = WarnLevel(),  # Show diagnostic warnings
+    performance = InfoLevel()   # Show performance info
 )
 
 result = solve(problem, verbose = custom_verbose)
 ```
 
 **Message Levels:**
-- `Silent`: No output for this category
-- `DebugLevel`: Lowest priority messages
-- `InfoLevel`: Informational messages
-- `WarnLevel`: Warning messages
-- `ErrorLevel`: Error messages
-- `MessageLevel(n)`: Custom level with integer value
+- `Silent()`: No output for this category
+- `DebugLevel()`: Lowest priority messages
+- `InfoLevel()`: Informational messages
+- `WarnLevel()`: Warning messages
+- `ErrorLevel()`: Error messages
+- `CustomLevel(n)`: Custom level with integer value
 
 ## Logging Backends
 

@@ -1,32 +1,47 @@
 using SciMLLogging
-using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, AbstractVerbosityPreset, MessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
+using SciMLLogging: SciMLLogging, AbstractVerbositySpecifier, @SciMLMessage, AbstractVerbosityPreset, AbstractMessageLevel, WarnLevel, InfoLevel, ErrorLevel, Silent, None, All, Minimal
 using Logging
 using Test
 
 # Structs for testing package - simplified structure
-struct TestVerbosity{Enabled} <: AbstractVerbositySpecifier{Enabled}
-    test1::MessageLevel
-    test2::MessageLevel
-    test3::MessageLevel
-    test4::MessageLevel
-end
+struct TestVerbosity <: AbstractVerbositySpecifier
+    test1
+    test2
+    test3
+    test4
 
-function TestVerbosity(;
-        test1 = WarnLevel,
-        test2 = InfoLevel,
-        test3 = ErrorLevel,
-        test4 = Silent
-    )
-    return TestVerbosity{true}(test1, test2, test3, test4)
+    function TestVerbosity(;
+            test1 = WarnLevel(),
+            test2 = InfoLevel(),
+            test3 = ErrorLevel(),
+            test4 = Silent()
+        )
+        return new(test1, test2, test3, test4)
+    end
 end
 
 function TestVerbosity(preset::AbstractVerbosityPreset)
     return if preset isa SciMLLogging.None
-        TestVerbosity{false}(Silent, Silent, Silent, Silent)
+        TestVerbosity(
+            test1 = Silent(),
+            test2 = Silent(),
+            test3 = Silent(),
+            test4 = Silent()
+        )
     elseif preset isa SciMLLogging.All
-        TestVerbosity{true}(InfoLevel, InfoLevel, InfoLevel, InfoLevel)
+        TestVerbosity(
+            test1 = InfoLevel(),
+            test2 = InfoLevel(),
+            test3 = InfoLevel(),
+            test4 = InfoLevel()
+        )
     elseif preset isa Minimal
-        TestVerbosity{true}(ErrorLevel, Silent, ErrorLevel, Silent)
+        TestVerbosity(
+            test1 = ErrorLevel(),
+            test2 = Silent(),
+            test3 = ErrorLevel(),
+            test4 = Silent()
+        )
     else
         TestVerbosity()
     end
@@ -78,10 +93,10 @@ end
 
 @testset "Disabled verbosity" begin
     verbose_off = TestVerbosity(
-        test1 = Silent,
-        test2 = Silent,
-        test3 = Silent,
-        test4 = Silent
+        test1 = Silent(),
+        test2 = Silent(),
+        test3 = Silent(),
+        test4 = Silent()
     )
 
     # Should not log anything when all categories are silent
@@ -182,7 +197,7 @@ end
     )
 
     # Test that silent still skips emission even with varargs
-    verbose_silent = TestVerbosity(test1 = Silent)
+    verbose_silent = TestVerbosity(test1 = Silent())
     @test_logs min_level = Logging.Debug @SciMLMessage(
         "Should not appear", verbose_silent, :test1, x, y
     )

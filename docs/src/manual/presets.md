@@ -61,43 +61,19 @@ All
 
 ## Custom Presets
 
-Packages can define their own preset types for specialized use cases. With the
-`@verbosity_specifier` macro, simply add the custom preset as a key in the
-`presets` block — the macro generates the preset's struct definition and the
-matching constructor automatically:
+Packages can define their own preset types for specialized use cases:
 
 ```julia
-@verbosity_specifier MyPackageVerbosity begin
-    toggles = (:initialization, :progress, :convergence, :warnings, :errors)
-
-    presets = (
-        # ... standard presets ...
-        DebuggingPreset = (
-            initialization = InfoLevel,
-            progress       = DebugLevel,  # Extra detailed progress
-            convergence    = InfoLevel,
-            warnings       = WarnLevel,
-            errors         = ErrorLevel,
-        ),
-    )
-
-    groups = ()
-end
-```
-
-For a manually-defined specifier, declare the preset type and the constructor
-yourself:
-
-```julia
+# Package-specific preset
 struct DebuggingPreset <: AbstractVerbosityPreset end
 
 function MyPackageVerbosity(::DebuggingPreset)
-    MyPackageVerbosity(
-        initialization = InfoLevel,
-        progress       = DebugLevel,
-        convergence    = InfoLevel,
-        warnings       = WarnLevel,
-        errors         = ErrorLevel,
+    MyPackageVerbosity{true}(
+        initialization = InfoLevel(),
+        progress = DebugLevel(),  # Extra detailed progress
+        convergence = InfoLevel(),
+        warnings = WarnLevel(),
+        errors = ErrorLevel()
     )
 end
 ```
@@ -125,11 +101,11 @@ verbosity = SolverVerbosity(Standard())
 
 # ...might be equivalent to this manual configuration:
 verbosity = SolverVerbosity(
-    initialization = InfoLevel,
-    progress = Silent,
-    convergence = InfoLevel,
-    diagnostics = WarnLevel,
-    performance = InfoLevel
+    initialization = InfoLevel(),
+    progress = Silent(),
+    convergence = InfoLevel(),
+    diagnostics = WarnLevel(),
+    performance = InfoLevel()
 )
 ```
 

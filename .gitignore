@@ -1,14 +1,1 @@
-Manifest*.toml
-*.jl.cov
-*.jl.*.cov
-*.jl.mem
-*.jl.*.mem
-Manifest.toml
-*.DS_Store
-.vscode
-profile.pb.gz
-.*.swp
-LocalPreferences.toml
-
-docs/build
-.claude/
+/Manifest*.toml
