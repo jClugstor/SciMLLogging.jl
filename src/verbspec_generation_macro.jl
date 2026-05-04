@@ -46,10 +46,11 @@ end
 ```
 """
 macro verbosity_specifier(name, block)
-    # Extract the three assignments from the block
-    local toggles_expr = nothing
-    local presets_expr = nothing
-    local groups_expr = nothing
+    # Extract the assignments from the block
+    local toggles_expr        = nothing
+    local sub_specifiers_expr = nothing
+    local presets_expr        = nothing
+    local groups_expr         = nothing
 
     if block.head == :block
         for ex in block.args
@@ -58,6 +59,12 @@ macro verbosity_specifier(name, block)
                 rhs = ex.args[2]
                 if lhs == :toggles
                     toggles_expr = rhs
+                elseif lhs == :sub_specifiers
+                    # Forward-compat alias accepted in 1.9 — treated as additional
+                    # toggles. SciMLLogging 2.0 gives sub_specifiers their own
+                    # parametric typing for inference; in 1.x they share the
+                    # toggles' wide Union field type.
+                    sub_specifiers_expr = rhs
                 elseif lhs == :presets
                     presets_expr = rhs
                 elseif lhs == :groups
@@ -75,6 +82,14 @@ macro verbosity_specifier(name, block)
     toggles_expr.head == :tuple || throw(ArgumentError("toggles must be a tuple"))
     # Extract the actual symbols from QuoteNode objects
     toggles = [t.value for t in toggles_expr.args]
+
+    # Parse sub_specifiers (optional) and append to toggles. Treating them as
+    # toggles is a no-op in 1.x because toggle fields already accept any of
+    # MessageLevel / preset / specifier via their Union typing.
+    if sub_specifiers_expr !== nothing
+        sub_specifiers_expr.head == :tuple || throw(ArgumentError("sub_specifiers must be a tuple"))
+        append!(toggles, [t.value for t in sub_specifiers_expr.args])
+    end
 
     # Parse presets - should be a NamedTuple
     presets_expr.head == :tuple || throw(ArgumentError("presets must be a NamedTuple"))

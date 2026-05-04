@@ -10,7 +10,22 @@ Base for types which specify which log messages are emitted at what level.
 """
 abstract type AbstractVerbositySpecifier end
 
-# Utilities 
+"""
+    is_enabled(verb::AbstractVerbositySpecifier) -> Bool
+
+Whether this verbosity specifier emits messages.
+
+In SciMLLogging 1.x this always returns `true`. In SciMLLogging 2.0 it returns
+`false` for instances constructed via the `None()` preset, since the `Enabled`
+type parameter is used to short-circuit `@SciMLMessage` at compile time.
+
+Provided for forward-compatibility: code that needs to write a portable
+disabled-path check across both 1.x and 2.0 can use `is_enabled(verb)` and
+get the right behavior on each version.
+"""
+is_enabled(::AbstractVerbositySpecifier) = true
+
+# Utilities
 
 function logging_message_level(option)
     if option isa DebugLevel

@@ -86,6 +86,27 @@ struct CustomLevel <: AbstractMessageLevel
 end
 
 """
+    MessageLevel(n::Int)
+
+Construct a message level by integer value. Returns the matching standard
+constant where one exists (`Silent`, `DebugLevel`, `InfoLevel`, `WarnLevel`,
+`ErrorLevel` for `0..4`); otherwise returns a `CustomLevel(n)`.
+
+This constructor is provided for forward-compatibility with SciMLLogging 2.0,
+where `MessageLevel` is the canonical concrete level type and the per-severity
+names are constants of that type. Code that uses `MessageLevel(n)` works
+identically on both 1.9+ and 2.0.
+"""
+function MessageLevel(n::Int)
+    n == 0 && return Silent()
+    n == 1 && return DebugLevel()
+    n == 2 && return InfoLevel()
+    n == 3 && return WarnLevel()
+    n == 4 && return ErrorLevel()
+    return CustomLevel(n)
+end
+
+"""
     AbstractVerbosityPreset
 
 Abstract base type for predefined verbosity configurations.
