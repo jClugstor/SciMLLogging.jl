@@ -13,6 +13,7 @@ end
 if GROUP == "Core" || GROUP == "All"
     @time @safetestset "Basic Tests" include("basics.jl")
     @time @safetestset "Verbosity Specifier Generation Tests" include("generation_test.jl")
+    @time @safetestset "Forward-Compat Surface (1.10+ / 2.0)" include("forward_compat.jl")
     @time @safetestset "Explicit Imports" include("explicit_imports.jl")
 end
 
